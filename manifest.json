@@ -1,5 +1,5 @@
 {
-  "latest_version": "9.9.9",
+  "latest_version": "1.0.0",
   "asset_url": "https://github.com/OWNER/REPO/releases/download/v1.2.0/patch-1.2.0.pck",
   "asset_name": "patch-1.2.0.pck",
   "notes": "Bugfixes and small improvements."
