@@ -23,6 +23,8 @@
         
         .wrapper {
             position: relative;
+            width: 100%;
+            max-width: 1000px;
         }
         
         .container {
@@ -30,7 +32,6 @@
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 700px;
             width: 100%;
             position: relative;
             z-index: 1;
@@ -42,11 +43,12 @@
             text-align: center;
         }
         
-        img {
+        .cover-image {
             max-width: 100%;
             height: auto;
             border-radius: 10px;
             margin: 20px 0;
+            display: block;
         }
         
         p {
@@ -85,23 +87,21 @@
             box-shadow: 0 8px 20px rgba(17, 153, 142, 0.6);
         }
         
-        .clock-container {
+        /* TIMER - REBUILT FROM SCRATCH */
+        .timer-wrapper {
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             border-radius: 20px;
-            padding: 50px 40px;
+            padding: 40px 20px;
             margin: 30px 0;
             box-shadow: 
                 0 0 30px rgba(147, 51, 234, 0.3),
                 inset 0 0 50px rgba(147, 51, 234, 0.1);
             position: relative;
             overflow: hidden;
-            max-width: 850px;
-            margin-left: auto;
-            margin-right: auto;
         }
         
-        /* Animated background particles */
-        .clock-container::before {
+        /* Animated background */
+        .timer-wrapper::before {
             content: '';
             position: absolute;
             width: 200%;
@@ -110,6 +110,7 @@
             background-size: 50px 50px;
             animation: moveParticles 20s linear infinite;
             opacity: 0.3;
+            z-index: 0;
         }
         
         @keyframes moveParticles {
@@ -117,20 +118,18 @@
             100% { transform: translate(50px, 50px); }
         }
         
-        /* Scanning line effect */
-        .clock-container::after {
+        /* Scanning line */
+        .timer-wrapper::after {
             content: '';
             position: absolute;
             top: 0;
             left: -100%;
             width: 100%;
             height: 3px;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(147, 51, 234, 0.8), 
-                transparent);
+            background: linear-gradient(90deg, transparent, rgba(147, 51, 234, 0.8), transparent);
             animation: scan 3s ease-in-out infinite;
             box-shadow: 0 0 20px rgba(147, 51, 234, 0.8);
+            z-index: 0;
         }
         
         @keyframes scan {
@@ -138,30 +137,32 @@
             50% { top: 100%; left: 100%; }
         }
         
-        #timer {
-            display: flex;
-            justify-content: center;
+        /* Timer grid layout */
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
             align-items: center;
-            gap: 25px;
             position: relative;
             z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
         }
         
-        .time-unit {
+        /* Time boxes */
+        .time-box {
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px 20px;
+            border-radius: 12px;
+            padding: 20px 12px;
             border: 2px solid rgba(147, 51, 234, 0.3);
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
-            min-width: 130px;
-            flex-shrink: 0;
         }
         
-        /* Holographic effect */
-        .time-unit::before {
+        /* Holographic shimmer */
+        .time-box::before {
             content: '';
             position: absolute;
             top: -50%;
@@ -174,16 +175,17 @@
                 rgba(147, 51, 234, 0.1) 50%,
                 transparent 70%
             );
-            animation: hologram 4s linear infinite;
+            animation: shimmer 4s linear infinite;
         }
         
-        @keyframes hologram {
+        @keyframes shimmer {
             0% { transform: translateX(-100%) translateY(-100%) rotate(0deg); }
             100% { transform: translateX(100%) translateY(100%) rotate(360deg); }
         }
         
-        .time-value {
-            font-size: 64px;
+        /* Numbers */
+        .time-number {
+            font-size: 48px;
             font-weight: bold;
             color: #fff;
             font-family: 'Courier New', monospace;
@@ -192,13 +194,13 @@
             text-shadow: 
                 0 0 10px rgba(147, 51, 234, 0.8),
                 0 0 20px rgba(147, 51, 234, 0.6),
-                0 0 30px rgba(147, 51, 234, 0.4),
-                0 0 40px rgba(147, 51, 234, 0.2);
-            animation: neonPulse 2s ease-in-out infinite;
-            line-height: 1;
+                0 0 30px rgba(147, 51, 234, 0.4);
+            animation: neonGlow 2s ease-in-out infinite;
+            line-height: 1.1;
+            text-align: center;
         }
         
-        @keyframes neonPulse {
+        @keyframes neonGlow {
             0%, 100% {
                 text-shadow: 
                     0 0 10px rgba(147, 51, 234, 0.8),
@@ -209,23 +211,22 @@
                 text-shadow: 
                     0 0 20px rgba(147, 51, 234, 1),
                     0 0 30px rgba(147, 51, 234, 0.8),
-                    0 0 40px rgba(147, 51, 234, 0.6),
-                    0 0 50px rgba(147, 51, 234, 0.4);
+                    0 0 40px rgba(147, 51, 234, 0.6);
             }
         }
         
-        /* Digit change animation */
-        @keyframes digitChange {
+        /* Number change animation */
+        @keyframes numberChange {
             0% { 
                 transform: translateY(0) scale(1);
                 opacity: 1;
             }
             50% { 
-                transform: translateY(-20px) scale(1.2);
+                transform: translateY(-15px) scale(1.15);
                 opacity: 0;
             }
             51% { 
-                transform: translateY(20px) scale(0.8);
+                transform: translateY(15px) scale(0.85);
                 opacity: 0;
             }
             100% { 
@@ -234,52 +235,49 @@
             }
         }
         
-        .time-value.changing {
-            animation: digitChange 0.5s ease-in-out, neonPulse 2s ease-in-out infinite;
+        .time-number.changing {
+            animation: numberChange 0.5s ease-in-out, neonGlow 2s ease-in-out infinite;
         }
         
+        /* Labels */
         .time-label {
-            font-size: 13px;
+            font-size: 11px;
             color: rgba(147, 51, 234, 0.9);
             text-transform: uppercase;
-            letter-spacing: 3px;
-            margin-top: 15px;
+            letter-spacing: 2px;
+            margin-top: 8px;
             display: block;
             font-weight: 600;
-            text-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+            text-shadow: 0 0 8px rgba(147, 51, 234, 0.5);
+            text-align: center;
         }
         
-        /* Character in the middle */
+        /* Character slot */
         .character-slot {
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            flex-shrink: 0;
         }
         
-        .character-image {
-            width: 200px;
+        .character-img {
+            width: 180px;
             height: auto;
             image-rendering: pixelated;
             filter: drop-shadow(0 0 15px rgba(147, 51, 234, 0.6));
-            animation: characterFloat 3s ease-in-out infinite;
+            animation: float 3s ease-in-out infinite;
         }
         
-        @keyframes characterFloat {
-            0%, 100% {
-                transform: translateY(0px);
-            }
-            50% {
-                transform: translateY(-10px);
-            }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
         }
 
-        /* Images in the blue area */
+        /* Decoration images */
         .decoration-image {
             position: fixed;
             width: 150px;
             z-index: 1;
+            image-rendering: pixelated;
         }
         
         .decoration-left {
@@ -291,6 +289,19 @@
             bottom: 20px;
             right: 20px;
         }
+        
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .timer-grid {
+                gap: 8px;
+            }
+            .time-number {
+                font-size: 36px;
+            }
+            .character-img {
+                width: 140px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -300,7 +311,7 @@
         <div class="container">
             <h1>Welcome to My Page! 🚀</h1>
             
-            <img src="images/cover11.png" alt="capa">
+            <img src="images/cover11.png" alt="capa" class="cover-image">
             
             <p>This is your content! Replace this with whatever text you want to display on your page!</p>
             
@@ -308,28 +319,35 @@
                 <button id="downloadBtn">Download</button>
             </div>
             
-            <div class="clock-container">
-                <div id="timer">
-                    <div class="time-unit">
-                        <span class="time-value" id="days">7</span>
+            <!-- REBUILT TIMER -->
+            <div class="timer-wrapper">
+                <div class="timer-grid">
+                    <!-- Days -->
+                    <div class="time-box">
+                        <span class="time-number" id="days">7</span>
                         <span class="time-label">Days</span>
                     </div>
-                    <div class="time-unit">
-                        <span class="time-value" id="hours">00</span>
+                    
+                    <!-- Hours -->
+                    <div class="time-box">
+                        <span class="time-number" id="hours">00</span>
                         <span class="time-label">Hours</span>
                     </div>
                     
-                    <!-- Character in the middle -->
+                    <!-- Character -->
                     <div class="character-slot">
-                        <img src="images/TimeLilPixel.png" alt="Time Lil" class="character-image">
+                        <img src="images/TimeLilPixel.png" alt="Time Lil" class="character-img">
                     </div>
                     
-                    <div class="time-unit">
-                        <span class="time-value" id="minutes">00</span>
+                    <!-- Minutes -->
+                    <div class="time-box">
+                        <span class="time-number" id="minutes">00</span>
                         <span class="time-label">Minutes</span>
                     </div>
-                    <div class="time-unit">
-                        <span class="time-value" id="seconds">00</span>
+                    
+                    <!-- Seconds -->
+                    <div class="time-box">
+                        <span class="time-number" id="seconds">00</span>
                         <span class="time-label">Seconds</span>
                     </div>
                 </div>
@@ -338,16 +356,13 @@
     </div>
 
     <script>
-        // Fixed target date: January 13, 2026 at 00:00:00 (midnight)
+        // Countdown to January 13, 2026 at midnight
         const targetDate = new Date('2026-01-13T00:00:00').getTime();
-        
-        let previousValues = { days: '', hours: '', minutes: '', seconds: '' };
         
         function updateCountdown() {
             const now = new Date().getTime();
             const distance = targetDate - now;
             
-            // If countdown is over
             if (distance < 0) {
                 document.getElementById('days').textContent = "00";
                 document.getElementById('hours').textContent = "00";
@@ -357,29 +372,18 @@
                 return;
             }
             
-            // Calculate time remaining
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            const newValues = {
-                days: days.toString(),
-                hours: hours.toString().padStart(2, '0'),
-                minutes: minutes.toString().padStart(2, '0'),
-                seconds: seconds.toString().padStart(2, '0')
-            };
-            
-            // Update with animation
-            updateElement('days', newValues.days);
-            updateElement('hours', newValues.hours);
-            updateElement('minutes', newValues.minutes);
-            updateElement('seconds', newValues.seconds);
-            
-            previousValues = newValues;
+            updateNumber('days', days.toString());
+            updateNumber('hours', hours.toString().padStart(2, '0'));
+            updateNumber('minutes', minutes.toString().padStart(2, '0'));
+            updateNumber('seconds', seconds.toString().padStart(2, '0'));
         }
         
-        function updateElement(id, value) {
+        function updateNumber(id, value) {
             const element = document.getElementById(id);
             if (element.textContent !== value) {
                 element.classList.add('changing');
@@ -392,20 +396,16 @@
             }
         }
         
-        // Update countdown immediately and then every second
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
         // Button runs away from mouse
         const btn = document.getElementById('downloadBtn');
-        const buttonArea = document.querySelector('.button-area');
-        
         let offsetX = 0;
         let offsetY = 0;
         
         document.addEventListener('mousemove', function(e) {
             const btnRect = btn.getBoundingClientRect();
-            
             const btnCenterX = btnRect.left + btnRect.width / 2;
             const btnCenterY = btnRect.top + btnRect.height / 2;
             
@@ -416,11 +416,9 @@
             const distanceY = mouseY - btnCenterY;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
-            // Detect from 80px away
             if (distance < 80) {
                 const angle = Math.atan2(distanceY, distanceX);
                 const moveDistance = 200;
-                
                 const randomAngleOffset = (Math.random() - 0.5) * 0.5;
                 const adjustedAngle = angle + randomAngleOffset;
                 
