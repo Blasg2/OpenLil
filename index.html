@@ -48,26 +48,6 @@
             margin-bottom: 20px;
         }
         
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: transform 0.2s;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-        }
-        
-        button:active {
-            transform: translateY(0);
-        }
-        
         #timer {
             font-size: 48px;
             font-weight: bold;
@@ -81,51 +61,43 @@
     <div class="container">
         <h1>Welcome to My Page! 🚀</h1>
         
-        <!-- Add your image here -->
         <img src="images/cover11.png" alt="capa">
         
         <p>This is your content! Replace this with whatever text you want to display on your page!</p>
         
-        <button onclick="startTimer()">Start Timer</button>
-        <button onclick="stopTimer()" style="background: #e74c3c;">Stop</button>
-        <button onclick="resetTimer()" style="background: #95a5a6;">Reset</button>
-        
-        <div id="timer">00:00:00</div>
+        <div id="timer">7d 00h 00m 00s</div>
     </div>
 
     <script>
-        let seconds = 0;
-        let timerInterval = null;
+        // Set target date to 7 days from now
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + 7);
         
-        function startTimer() {
-            if (timerInterval) return; // Already running
-            timerInterval = setInterval(() => {
-                seconds++;
-                updateDisplay();
-            }, 1000);
-        }
-        
-        function stopTimer() {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        
-        function resetTimer() {
-            stopTimer();
-            seconds = 0;
-            updateDisplay();
-        }
-        
-        function updateDisplay() {
-            let hours = Math.floor(seconds / 3600);
-            let mins = Math.floor((seconds % 3600) / 60);
-            let secs = seconds % 60;
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
             
+            // If countdown is over
+            if (distance < 0) {
+                document.getElementById('timer').textContent = "Time's Up!";
+                clearInterval(timerInterval);
+                return;
+            }
+            
+            // Calculate time remaining
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            // Display the countdown
             document.getElementById('timer').textContent = 
-                `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
         }
+        
+        // Update countdown immediately and then every second
+        updateCountdown();
+        const timerInterval = setInterval(updateCountdown, 1000);
     </script>
 </body>
-
 </html>
-
