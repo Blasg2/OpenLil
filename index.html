@@ -56,6 +56,7 @@
             text-align: center;
             margin: 30px 0;
             height: 80px;
+            position: relative;
         }
         
         #downloadBtn {
@@ -119,12 +120,11 @@
             display: block;
         }
 
-        /* Example: You can put images in the blue area like this */
+        /* Images in the blue area */
         .decoration-image {
             position: fixed;
             width: 150px;
-            opacity: 0.3;
-            z-index: 0;
+            z-index: 1;
         }
         
         .decoration-left {
@@ -139,8 +139,8 @@
     </style>
 </head>
 <body>
-    <!-- You can add images in the blue area like this: -->
-    <!-- <img src="images/decoration.png" class="decoration-image decoration-left" alt="decoration"> -->
+    <!-- Add your decoration images here -->
+    <!-- <img src="images/angel.png" class="decoration-image decoration-left" alt="decoration"> -->
     
     <div class="container">
         <h1>Welcome to My Page! 🚀</h1>
@@ -149,7 +149,7 @@
         
         <p>This is your content! Replace this with whatever text you want to display on your page!</p>
         
-        <div class="button-placeholder">
+        <div class="button-placeholder" id="buttonPlaceholder">
             <button id="downloadBtn">Download</button>
         </div>
         
@@ -210,15 +210,24 @@
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
-        // Button runs away from mouse - MUCH HARDER VERSION
+        // Button runs away from mouse
         const btn = document.getElementById('downloadBtn');
-        let buttonX = window.innerWidth / 2;
-        let buttonY = window.innerHeight / 2;
+        const placeholder = document.getElementById('buttonPlaceholder');
+        let buttonX, buttonY;
         
-        // Position button initially in center
-        btn.style.left = buttonX + 'px';
-        btn.style.top = buttonY + 'px';
-        btn.style.transform = 'translate(-50%, -50%)';
+        // Position button initially in the placeholder
+        function initButtonPosition() {
+            const placeholderRect = placeholder.getBoundingClientRect();
+            buttonX = placeholderRect.left + placeholderRect.width / 2;
+            buttonY = placeholderRect.top + placeholderRect.height / 2;
+            btn.style.left = buttonX + 'px';
+            btn.style.top = buttonY + 'px';
+            btn.style.transform = 'translate(-50%, -50%)';
+        }
+        
+        // Initialize position after page loads
+        window.addEventListener('load', initButtonPosition);
+        initButtonPosition();
         
         document.addEventListener('mousemove', function(e) {
             const btnRect = btn.getBoundingClientRect();
@@ -232,11 +241,11 @@
             const distanceY = mouseY - btnCenterY;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
-            // Detect from 200px away (was 100px) - MUCH more sensitive
-            if (distance < 200) {
+            // Detect from 80px away (closer than before)
+            if (distance < 80) {
                 const angle = Math.atan2(distanceY, distanceX);
-                // Move MUCH further away - 250px instead of previous amount
-                const moveDistance = 250;
+                // Move 200px away
+                const moveDistance = 200;
                 
                 // Add some randomness to make it unpredictable
                 const randomAngleOffset = (Math.random() - 0.5) * 0.5;
@@ -248,7 +257,7 @@
                 // Keep button within viewport bounds
                 const halfWidth = btnRect.width / 2;
                 const halfHeight = btnRect.height / 2;
-                const margin = 20; // Keep away from edges
+                const margin = 20;
                 
                 buttonX = Math.max(margin + halfWidth, Math.min(window.innerWidth - margin - halfWidth, buttonX));
                 buttonY = Math.max(margin + halfHeight, Math.min(window.innerHeight - margin - halfHeight, buttonY));
@@ -258,7 +267,7 @@
             }
         });
         
-        // Optional: Make it even more evil - teleport randomly if you get too close
+        // Teleport randomly if you actually hover over it
         btn.addEventListener('mouseenter', function() {
             buttonX = Math.random() * (window.innerWidth - 200) + 100;
             buttonY = Math.random() * (window.innerHeight - 200) + 100;
@@ -269,4 +278,3 @@
 </body>
 <img src="images/Isanja.png" class="decoration-image decoration-left" alt="decoration">
 </html>
-
