@@ -70,7 +70,7 @@
             font-weight: bold;
             transition: all 0.15s ease-out;
             box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
-            position: fixed;
+            position: absolute;
             z-index: 9999;
             white-space: nowrap;
         }
@@ -85,6 +85,29 @@
             padding: 30px;
             margin: 30px 0;
             box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .clock-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.1),
+                transparent
+            );
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         #timer {
@@ -92,6 +115,8 @@
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             text-align: center;
+            position: relative;
+            z-index: 1;
         }
         
         .time-unit {
@@ -100,6 +125,23 @@
             border-radius: 15px;
             padding: 20px 10px;
             border: 2px solid rgba(255, 255, 255, 0.2);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .time-unit:nth-child(1) { animation-delay: 0s; }
+        .time-unit:nth-child(2) { animation-delay: 0.2s; }
+        .time-unit:nth-child(3) { animation-delay: 0.4s; }
+        .time-unit:nth-child(4) { animation-delay: 0.6s; }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 20px 5px rgba(255, 255, 255, 0.3);
+            }
         }
         
         .time-value {
@@ -109,6 +151,19 @@
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
             font-family: 'Courier New', monospace;
             display: block;
+            animation: glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5),
+                             0 0 30px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                text-shadow: 0 0 30px rgba(255, 255, 255, 0.8),
+                             0 0 40px rgba(255, 255, 255, 0.5),
+                             0 0 50px rgba(255, 255, 255, 0.3);
+            }
         }
         
         .time-label {
@@ -118,6 +173,23 @@
             letter-spacing: 2px;
             margin-top: 10px;
             display: block;
+        }
+        
+        /* Flip animation when number changes */
+        @keyframes flip {
+            0% {
+                transform: rotateX(0deg);
+            }
+            50% {
+                transform: rotateX(90deg);
+            }
+            100% {
+                transform: rotateX(0deg);
+            }
+        }
+        
+        .time-value.flip {
+            animation: flip 0.6s ease-in-out, glow 2s ease-in-out infinite;
         }
 
         /* Images in the blue area */
@@ -179,6 +251,8 @@
         // Fixed target date: January 13, 2026 at 00:00:00 (midnight)
         const targetDate = new Date('2026-01-13T00:00:00').getTime();
         
+        let previousValues = { days: '', hours: '', minutes: '', seconds: '' };
+        
         function updateCountdown() {
             const now = new Date().getTime();
             const distance = targetDate - now;
@@ -199,18 +273,40 @@
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            // Update display
-            document.getElementById('days').textContent = days;
-            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            const newValues = {
+                days: days.toString(),
+                hours: hours.toString().padStart(2, '0'),
+                minutes: minutes.toString().padStart(2, '0'),
+                seconds: seconds.toString().padStart(2, '0')
+            };
+            
+            // Update with flip animation
+            updateElement('days', newValues.days);
+            updateElement('hours', newValues.hours);
+            updateElement('minutes', newValues.minutes);
+            updateElement('seconds', newValues.seconds);
+            
+            previousValues = newValues;
+        }
+        
+        function updateElement(id, value) {
+            const element = document.getElementById(id);
+            if (element.textContent !== value) {
+                element.classList.add('flip');
+                setTimeout(() => {
+                    element.textContent = value;
+                }, 300);
+                setTimeout(() => {
+                    element.classList.remove('flip');
+                }, 600);
+            }
         }
         
         // Update countdown immediately and then every second
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
-        // Button runs away from mouse
+        // Button runs away from mouse - SCROLL INDEPENDENT
         const btn = document.getElementById('downloadBtn');
         const placeholder = document.getElementById('buttonPlaceholder');
         let buttonX, buttonY;
@@ -218,8 +314,12 @@
         // Position button initially in the placeholder
         function initButtonPosition() {
             const placeholderRect = placeholder.getBoundingClientRect();
-            buttonX = placeholderRect.left + placeholderRect.width / 2;
-            buttonY = placeholderRect.top + placeholderRect.height / 2;
+            const containerRect = placeholder.parentElement.getBoundingClientRect();
+            
+            // Position relative to container
+            buttonX = placeholderRect.left - containerRect.left + placeholderRect.width / 2;
+            buttonY = placeholderRect.top - containerRect.top + placeholderRect.height / 2;
+            
             btn.style.left = buttonX + 'px';
             btn.style.top = buttonY + 'px';
             btn.style.transform = 'translate(-50%, -50%)';
@@ -231,6 +331,8 @@
         
         document.addEventListener('mousemove', function(e) {
             const btnRect = btn.getBoundingClientRect();
+            const containerRect = placeholder.parentElement.getBoundingClientRect();
+            
             const btnCenterX = btnRect.left + btnRect.width / 2;
             const btnCenterY = btnRect.top + btnRect.height / 2;
             
@@ -241,26 +343,28 @@
             const distanceY = mouseY - btnCenterY;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
-            // Detect from 80px away (closer than before)
+            // Detect from 80px away
             if (distance < 80) {
                 const angle = Math.atan2(distanceY, distanceX);
-                // Move 200px away
                 const moveDistance = 200;
                 
-                // Add some randomness to make it unpredictable
                 const randomAngleOffset = (Math.random() - 0.5) * 0.5;
                 const adjustedAngle = angle + randomAngleOffset;
                 
-                buttonX = btnCenterX - Math.cos(adjustedAngle) * moveDistance;
-                buttonY = btnCenterY - Math.sin(adjustedAngle) * moveDistance;
+                // Calculate new position relative to viewport
+                let newX = btnCenterX - Math.cos(adjustedAngle) * moveDistance;
+                let newY = btnCenterY - Math.sin(adjustedAngle) * moveDistance;
                 
-                // Keep button within viewport bounds
+                // Convert to position relative to container
+                buttonX = newX - containerRect.left;
+                buttonY = newY - containerRect.top;
+                
+                // Keep button within reasonable bounds
                 const halfWidth = btnRect.width / 2;
                 const halfHeight = btnRect.height / 2;
-                const margin = 20;
                 
-                buttonX = Math.max(margin + halfWidth, Math.min(window.innerWidth - margin - halfWidth, buttonX));
-                buttonY = Math.max(margin + halfHeight, Math.min(window.innerHeight - margin - halfHeight, buttonY));
+                buttonX = Math.max(-200, Math.min(containerRect.width + 200, buttonX));
+                buttonY = Math.max(-200, Math.min(containerRect.height + 200, buttonY));
                 
                 btn.style.left = buttonX + 'px';
                 btn.style.top = buttonY + 'px';
@@ -269,8 +373,9 @@
         
         // Teleport randomly if you actually hover over it
         btn.addEventListener('mouseenter', function() {
-            buttonX = Math.random() * (window.innerWidth - 200) + 100;
-            buttonY = Math.random() * (window.innerHeight - 200) + 100;
+            const containerRect = placeholder.parentElement.getBoundingClientRect();
+            buttonX = Math.random() * containerRect.width;
+            buttonY = Math.random() * containerRect.height;
             btn.style.left = buttonX + 'px';
             btn.style.top = buttonY + 'px';
         });
