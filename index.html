@@ -88,13 +88,16 @@
         .clock-container {
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             border-radius: 20px;
-            padding: 40px 30px;
+            padding: 50px 40px;
             margin: 30px 0;
             box-shadow: 
                 0 0 30px rgba(147, 51, 234, 0.3),
                 inset 0 0 50px rgba(147, 51, 234, 0.1);
             position: relative;
             overflow: hidden;
+            max-width: 850px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         /* Animated background particles */
@@ -136,11 +139,10 @@
         }
         
         #timer {
-            display: grid;
-            grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr) 200px minmax(120px, 1fr) minmax(120px, 1fr);
-            gap: 20px;
+            display: flex;
+            justify-content: center;
             align-items: center;
-            text-align: center;
+            gap: 25px;
             position: relative;
             z-index: 1;
         }
@@ -149,13 +151,14 @@
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
             border-radius: 15px;
-            padding: 30px 15px;  /* Increased from 25px 10px */
+            padding: 30px 20px;
             border: 2px solid rgba(147, 51, 234, 0.3);
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
+            min-width: 130px;
+            flex-shrink: 0;
         }
-
         
         /* Holographic effect */
         .time-unit::before {
@@ -180,18 +183,19 @@
         }
         
         .time-value {
-        font-size: 64px;  /* Increased from 52px */
-        font-weight: bold;
-        color: #fff;
-        font-family: 'Courier New', monospace;
-        display: block;
-        position: relative;
-        text-shadow: 
-            0 0 10px rgba(147, 51, 234, 0.8),
-            0 0 20px rgba(147, 51, 234, 0.6),
-            0 0 30px rgba(147, 51, 234, 0.4),
-            0 0 40px rgba(147, 51, 234, 0.2);
-        animation: neonPulse 2s ease-in-out infinite;
+            font-size: 64px;
+            font-weight: bold;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            display: block;
+            position: relative;
+            text-shadow: 
+                0 0 10px rgba(147, 51, 234, 0.8),
+                0 0 20px rgba(147, 51, 234, 0.6),
+                0 0 30px rgba(147, 51, 234, 0.4),
+                0 0 40px rgba(147, 51, 234, 0.2);
+            animation: neonPulse 2s ease-in-out infinite;
+            line-height: 1;
         }
         
         @keyframes neonPulse {
@@ -235,7 +239,7 @@
         }
         
         .time-label {
-            font-size: 13px;  /* Increased from 12px */
+            font-size: 13px;
             color: rgba(147, 51, 234, 0.9);
             text-transform: uppercase;
             letter-spacing: 3px;
@@ -251,6 +255,7 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            flex-shrink: 0;
         }
         
         .character-image {
@@ -289,8 +294,7 @@
     </style>
 </head>
 <body>
-    <!-- Add your decoration images here -->
-    <!-- <img src="images/angel.png" class="decoration-image decoration-left" alt="decoration"> -->
+    <img src="images/Isanja.png" class="decoration-image decoration-left" alt="decoration">
     
     <div class="wrapper">
         <div class="container">
@@ -437,13 +441,4 @@
         });
     </script>
 </body>
-<img src="images/Isanja.png" class="decoration-image decoration-left" alt="decoration">
 </html>
-
-
-
-
-
-
-
-
