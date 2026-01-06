@@ -28,6 +28,8 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             max-width: 700px;
             width: 100%;
+            position: relative;
+            z-index: 1;
         }
         
         h1 {
@@ -50,11 +52,10 @@
             text-align: center;
         }
         
-        .button-container {
+        .button-placeholder {
             text-align: center;
             margin: 30px 0;
             height: 80px;
-            position: relative;
         }
         
         #downloadBtn {
@@ -66,12 +67,11 @@
             cursor: pointer;
             font-size: 18px;
             font-weight: bold;
-            transition: all 0.1s ease;
+            transition: all 0.15s ease-out;
             box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
+            position: fixed;
+            z-index: 9999;
+            white-space: nowrap;
         }
         
         #downloadBtn:hover {
@@ -118,9 +118,30 @@
             margin-top: 10px;
             display: block;
         }
+
+        /* Example: You can put images in the blue area like this */
+        .decoration-image {
+            position: fixed;
+            width: 150px;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .decoration-left {
+            top: 20px;
+            left: 20px;
+        }
+        
+        .decoration-right {
+            bottom: 20px;
+            right: 20px;
+        }
     </style>
 </head>
 <body>
+    <!-- You can add images in the blue area like this: -->
+    <!-- <img src="images/decoration.png" class="decoration-image decoration-left" alt="decoration"> -->
+    
     <div class="container">
         <h1>Welcome to My Page! 🚀</h1>
         
@@ -128,7 +149,7 @@
         
         <p>This is your content! Replace this with whatever text you want to display on your page!</p>
         
-        <div class="button-container">
+        <div class="button-placeholder">
             <button id="downloadBtn">Download</button>
         </div>
         
@@ -189,13 +210,18 @@
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
-        // Button runs away from mouse
+        // Button runs away from mouse - MUCH HARDER VERSION
         const btn = document.getElementById('downloadBtn');
-        const container = document.querySelector('.button-container');
+        let buttonX = window.innerWidth / 2;
+        let buttonY = window.innerHeight / 2;
         
-        btn.addEventListener('mousemove', function(e) {
+        // Position button initially in center
+        btn.style.left = buttonX + 'px';
+        btn.style.top = buttonY + 'px';
+        btn.style.transform = 'translate(-50%, -50%)';
+        
+        document.addEventListener('mousemove', function(e) {
             const btnRect = btn.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
             const btnCenterX = btnRect.left + btnRect.width / 2;
             const btnCenterY = btnRect.top + btnRect.height / 2;
             
@@ -206,26 +232,40 @@
             const distanceY = mouseY - btnCenterY;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
-            // If mouse is within 100px, move button away
-            if (distance < 100) {
+            // Detect from 200px away (was 100px) - MUCH more sensitive
+            if (distance < 200) {
                 const angle = Math.atan2(distanceY, distanceX);
-                const moveDistance = 100 - distance;
+                // Move MUCH further away - 250px instead of previous amount
+                const moveDistance = 250;
                 
-                let newX = btnCenterX - Math.cos(angle) * moveDistance;
-                let newY = btnCenterY - Math.sin(angle) * moveDistance;
+                // Add some randomness to make it unpredictable
+                const randomAngleOffset = (Math.random() - 0.5) * 0.5;
+                const adjustedAngle = angle + randomAngleOffset;
                 
-                // Keep button within container bounds
+                buttonX = btnCenterX - Math.cos(adjustedAngle) * moveDistance;
+                buttonY = btnCenterY - Math.sin(adjustedAngle) * moveDistance;
+                
+                // Keep button within viewport bounds
                 const halfWidth = btnRect.width / 2;
                 const halfHeight = btnRect.height / 2;
+                const margin = 20; // Keep away from edges
                 
-                newX = Math.max(containerRect.left + halfWidth, Math.min(containerRect.right - halfWidth, newX));
-                newY = Math.max(containerRect.top + halfHeight, Math.min(containerRect.bottom - halfHeight, newY));
+                buttonX = Math.max(margin + halfWidth, Math.min(window.innerWidth - margin - halfWidth, buttonX));
+                buttonY = Math.max(margin + halfHeight, Math.min(window.innerHeight - margin - halfHeight, buttonY));
                 
-                btn.style.left = (newX - containerRect.left) + 'px';
-                btn.style.top = (newY - containerRect.top) + 'px';
-                btn.style.transform = 'translate(-50%, -50%)';
+                btn.style.left = buttonX + 'px';
+                btn.style.top = buttonY + 'px';
             }
+        });
+        
+        // Optional: Make it even more evil - teleport randomly if you get too close
+        btn.addEventListener('mouseenter', function() {
+            buttonX = Math.random() * (window.innerWidth - 200) + 100;
+            buttonY = Math.random() * (window.innerHeight - 200) + 100;
+            btn.style.left = buttonX + 'px';
+            btn.style.top = buttonY + 'px';
         });
     </script>
 </body>
+<img src="images/isanja.png" class="decoration-image decoration-left" alt="decoration">
 </html>
