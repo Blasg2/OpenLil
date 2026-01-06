@@ -149,12 +149,13 @@
             background: rgba(0, 0, 0, 0.4);
             backdrop-filter: blur(10px);
             border-radius: 15px;
-            padding: 25px 10px;
+            padding: 30px 15px;  /* Increased from 25px 10px */
             border: 2px solid rgba(147, 51, 234, 0.3);
             position: relative;
             overflow: hidden;
             box-shadow: 0 0 20px rgba(147, 51, 234, 0.2);
         }
+
         
         /* Holographic effect */
         .time-unit::before {
@@ -179,18 +180,18 @@
         }
         
         .time-value {
-            font-size: 52px;
-            font-weight: bold;
-            color: #fff;
-            font-family: 'Courier New', monospace;
-            display: block;
-            position: relative;
-            text-shadow: 
-                0 0 10px rgba(147, 51, 234, 0.8),
-                0 0 20px rgba(147, 51, 234, 0.6),
-                0 0 30px rgba(147, 51, 234, 0.4),
-                0 0 40px rgba(147, 51, 234, 0.2);
-            animation: neonPulse 2s ease-in-out infinite;
+        font-size: 64px;  /* Increased from 52px */
+        font-weight: bold;
+        color: #fff;
+        font-family: 'Courier New', monospace;
+        display: block;
+        position: relative;
+        text-shadow: 
+            0 0 10px rgba(147, 51, 234, 0.8),
+            0 0 20px rgba(147, 51, 234, 0.6),
+            0 0 30px rgba(147, 51, 234, 0.4),
+            0 0 40px rgba(147, 51, 234, 0.2);
+        animation: neonPulse 2s ease-in-out infinite;
         }
         
         @keyframes neonPulse {
@@ -234,7 +235,7 @@
         }
         
         .time-label {
-            font-size: 12px;
+            font-size: 13px;  /* Increased from 12px */
             color: rgba(147, 51, 234, 0.9);
             text-transform: uppercase;
             letter-spacing: 3px;
@@ -438,6 +439,7 @@
 </body>
 <img src="images/Isanja.png" class="decoration-image decoration-left" alt="decoration">
 </html>
+
 
 
 
