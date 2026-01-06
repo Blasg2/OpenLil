@@ -26,13 +26,14 @@
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
         }
         
         h1 {
             color: #333;
             margin-bottom: 20px;
+            text-align: center;
         }
         
         img {
@@ -46,31 +47,116 @@
             color: #666;
             line-height: 1.6;
             margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+            height: 80px;
+            position: relative;
+        }
+        
+        #downloadBtn {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: all 0.1s ease;
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #downloadBtn:hover {
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.6);
+        }
+        
+        .clock-container {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
         }
         
         #timer {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .time-unit {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px 10px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .time-value {
             font-size: 48px;
             font-weight: bold;
-            color: #667eea;
-            margin: 30px 0;
-            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            font-family: 'Courier New', monospace;
+            display: block;
+        }
+        
+        .time-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            display: block;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>   🫰Lil's Life🫰</h1>
+        <h1>Welcome to My Page! 🚀</h1>
         
         <img src="images/cover11.png" alt="capa">
         
-        <p>Download button!</p>
+        <p>This is your content! Replace this with whatever text you want to display on your page!</p>
         
-        <div id="timer">7d 00h 00m 00s</div>
+        <div class="button-container">
+            <button id="downloadBtn">Download</button>
+        </div>
+        
+        <div class="clock-container">
+            <div id="timer">
+                <div class="time-unit">
+                    <span class="time-value" id="days">7</span>
+                    <span class="time-label">Days</span>
+                </div>
+                <div class="time-unit">
+                    <span class="time-value" id="hours">00</span>
+                    <span class="time-label">Hours</span>
+                </div>
+                <div class="time-unit">
+                    <span class="time-value" id="minutes">00</span>
+                    <span class="time-label">Minutes</span>
+                </div>
+                <div class="time-unit">
+                    <span class="time-value" id="seconds">00</span>
+                    <span class="time-label">Seconds</span>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         // Fixed target date: January 13, 2026 at 00:00:00 (midnight)
-        const targetDate = new Date('2026-01-13T18:00:00').getTime();
+        const targetDate = new Date('2026-01-13T00:00:00').getTime();
         
         function updateCountdown() {
             const now = new Date().getTime();
@@ -78,7 +164,10 @@
             
             // If countdown is over
             if (distance < 0) {
-                document.getElementById('timer').textContent = "Time's Up!";
+                document.getElementById('days').textContent = "00";
+                document.getElementById('hours').textContent = "00";
+                document.getElementById('minutes').textContent = "00";
+                document.getElementById('seconds').textContent = "00";
                 clearInterval(timerInterval);
                 return;
             }
@@ -89,15 +178,54 @@
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             
-            // Display the countdown
-            document.getElementById('timer').textContent = 
-                `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+            // Update display
+            document.getElementById('days').textContent = days;
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
         }
         
         // Update countdown immediately and then every second
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
+        
+        // Button runs away from mouse
+        const btn = document.getElementById('downloadBtn');
+        const container = document.querySelector('.button-container');
+        
+        btn.addEventListener('mousemove', function(e) {
+            const btnRect = btn.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            const btnCenterX = btnRect.left + btnRect.width / 2;
+            const btnCenterY = btnRect.top + btnRect.height / 2;
+            
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            
+            const distanceX = mouseX - btnCenterX;
+            const distanceY = mouseY - btnCenterY;
+            const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+            
+            // If mouse is within 100px, move button away
+            if (distance < 100) {
+                const angle = Math.atan2(distanceY, distanceX);
+                const moveDistance = 100 - distance;
+                
+                let newX = btnCenterX - Math.cos(angle) * moveDistance;
+                let newY = btnCenterY - Math.sin(angle) * moveDistance;
+                
+                // Keep button within container bounds
+                const halfWidth = btnRect.width / 2;
+                const halfHeight = btnRect.height / 2;
+                
+                newX = Math.max(containerRect.left + halfWidth, Math.min(containerRect.right - halfWidth, newX));
+                newY = Math.max(containerRect.top + halfHeight, Math.min(containerRect.bottom - halfHeight, newY));
+                
+                btn.style.left = (newX - containerRect.left) + 'px';
+                btn.style.top = (newY - containerRect.top) + 'px';
+                btn.style.transform = 'translate(-50%, -50%)';
+            }
+        });
     </script>
 </body>
 </html>
-
