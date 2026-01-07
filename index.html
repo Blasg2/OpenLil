@@ -76,7 +76,10 @@
             font-weight: bold;
             transition: all 0.15s ease-out;
             box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
-            position: fixed;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             z-index: 100;
             white-space: nowrap;
         }
@@ -409,30 +412,17 @@
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
-        // Button runs away from mouse - EXTREME MODE
+        // Button runs away from mouse - ORIGINAL BEHAVIOR + TELEPORT FIX
         const btn = document.getElementById('downloadBtn');
         const buttonArea = document.querySelector('.button-area');
-
-        // Track button position in viewport coordinates
-        let buttonX = window.innerWidth / 2;
-        let buttonY = null;
-
-        // Initialize button position
-        function initButton() {
-            const areaRect = buttonArea.getBoundingClientRect();
-            buttonX = areaRect.left + areaRect.width / 2;
-            buttonY = areaRect.top + areaRect.height / 2;
-            btn.style.position = 'fixed';
-            btn.style.left = buttonX + 'px';
-            btn.style.top = buttonY + 'px';
-            btn.style.transform = 'translate(-50%, -50%)';
-        }
-
-        initButton();
-        window.addEventListener('resize', initButton);
-
+        
+        let offsetX = 0;
+        let offsetY = 0;
+        
         document.addEventListener('mousemove', function(e) {
+            const areaRect = buttonArea.getBoundingClientRect();
             const btnRect = btn.getBoundingClientRect();
+            
             const btnCenterX = btnRect.left + btnRect.width / 2;
             const btnCenterY = btnRect.top + btnRect.height / 2;
             
@@ -443,46 +433,38 @@
             const distanceY = mouseY - btnCenterY;
             const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
             
-            // Detect from 120px away (increased from 80px)
-            if (distance < 120) {
+            // Detect from 80px away (original)
+            if (distance < 80) {
                 const angle = Math.atan2(distanceY, distanceX);
-                const moveDistance = 250; // Increased from 200
-                const randomAngleOffset = (Math.random() - 0.5) * 0.8; // More randomness
+                const moveDistance = 200; // Original 200px
+                
+                const randomAngleOffset = (Math.random() - 0.5) * 0.5;
                 const adjustedAngle = angle + randomAngleOffset;
                 
-                // Move away
-                buttonX -= Math.cos(adjustedAngle) * moveDistance;
-                buttonY -= Math.sin(adjustedAngle) * moveDistance;
+                offsetX -= Math.cos(adjustedAngle) * moveDistance;
+                offsetY -= Math.sin(adjustedAngle) * moveDistance;
                 
-                // Keep within viewport with margin
-                const margin = 100;
-                buttonX = Math.max(margin, Math.min(window.innerWidth - margin, buttonX));
-                buttonY = Math.max(margin, Math.min(window.innerHeight - margin, buttonY));
+                // Keep within container (original limits)
+                offsetX = Math.max(-300, Math.min(300, offsetX));
+                offsetY = Math.max(-50, Math.min(50, offsetY));
                 
-                btn.style.left = buttonX + 'px';
-                btn.style.top = buttonY + 'px';
+                btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
             }
         });
-
-        // IMMEDIATE teleport on mouseenter - jump to random location
+        
+        // INSTANT TELEPORT on mouseenter - prevents getting stuck
         btn.addEventListener('mouseenter', function() {
-            // Teleport to completely random location
-            const margin = 150;
-            buttonX = Math.random() * (window.innerWidth - margin * 2) + margin;
-            buttonY = Math.random() * (window.innerHeight - margin * 2) + margin;
-            
-            btn.style.left = buttonX + 'px';
-            btn.style.top = buttonY + 'px';
+            // Teleport to random position within button area
+            offsetX = (Math.random() - 0.5) * 500; // Wide range
+            offsetY = (Math.random() - 0.5) * 80;
+            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
         });
-
-        // Extra safety: also trigger on mouseover (catches more events)
+        
+        // Extra safety: also trigger on mouseover
         btn.addEventListener('mouseover', function() {
-            const margin = 150;
-            buttonX = Math.random() * (window.innerWidth - margin * 2) + margin;
-            buttonY = Math.random() * (window.innerHeight - margin * 2) + margin;
-            
-            btn.style.left = buttonX + 'px';
-            btn.style.top = buttonY + 'px';
+            offsetX = (Math.random() - 0.5) * 500;
+            offsetY = (Math.random() - 0.5) * 80;
+            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
         });
     </script>
 </body>
