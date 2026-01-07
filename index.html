@@ -412,60 +412,70 @@
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
-        // Button runs away from mouse - ORIGINAL BEHAVIOR + TELEPORT FIX
+        // Button runs away from mouse - WITH CONTINUOUS MONITORING
         const btn = document.getElementById('downloadBtn');
         const buttonArea = document.querySelector('.button-area');
         
         let offsetX = 0;
         let offsetY = 0;
+        let lastMouseX = 0;
+        let lastMouseY = 0;
         
+        // Track mouse position constantly
         document.addEventListener('mousemove', function(e) {
-            const areaRect = buttonArea.getBoundingClientRect();
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+        
+        // CONTINUOUS CHECK - runs every 50ms
+        setInterval(function() {
             const btnRect = btn.getBoundingClientRect();
             
-            const btnCenterX = btnRect.left + btnRect.width / 2;
-            const btnCenterY = btnRect.top + btnRect.height / 2;
+            // Check if mouse is inside button
+            const isInside = lastMouseX >= btnRect.left && lastMouseX <= btnRect.right &&
+                             lastMouseY >= btnRect.top && lastMouseY <= btnRect.bottom;
             
-            const mouseX = e.clientX;
-            const mouseY = e.clientY;
-            
-            const distanceX = mouseX - btnCenterX;
-            const distanceY = mouseY - btnCenterY;
-            const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-            
-            // Detect from 80px away (original)
-            if (distance < 80) {
-                const angle = Math.atan2(distanceY, distanceX);
-                const moveDistance = 200; // Original 200px
-                
-                const randomAngleOffset = (Math.random() - 0.5) * 0.5;
-                const adjustedAngle = angle + randomAngleOffset;
-                
-                offsetX -= Math.cos(adjustedAngle) * moveDistance;
-                offsetY -= Math.sin(adjustedAngle) * moveDistance;
-                
-                // Keep within container (original limits)
-                offsetX = Math.max(-300, Math.min(300, offsetX));
-                offsetY = Math.max(-50, Math.min(50, offsetY));
-                
+            if (isInside) {
+                // INSTANT TELEPORT
+                offsetX = (Math.random() - 0.5) * 500;
+                offsetY = (Math.random() - 0.5) * 80;
                 btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+            } else {
+                // Check proximity (original 80px)
+                const btnCenterX = btnRect.left + btnRect.width / 2;
+                const btnCenterY = btnRect.top + btnRect.height / 2;
+                
+                const distanceX = lastMouseX - btnCenterX;
+                const distanceY = lastMouseY - btnCenterY;
+                const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+                
+                if (distance < 80) {
+                    const angle = Math.atan2(distanceY, distanceX);
+                    const moveDistance = 200; // Original 200px
+                    const randomAngleOffset = (Math.random() - 0.5) * 0.5;
+                    const adjustedAngle = angle + randomAngleOffset;
+                    
+                    offsetX -= Math.cos(adjustedAngle) * moveDistance;
+                    offsetY -= Math.sin(adjustedAngle) * moveDistance;
+                    
+                    // Original limits
+                    offsetX = Math.max(-300, Math.min(300, offsetX));
+                    offsetY = Math.max(-50, Math.min(50, offsetY));
+                    
+                    btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+                }
             }
-        });
+        }, 50); // Checks every 50 milliseconds
         
-        // INSTANT TELEPORT on mouseenter - prevents getting stuck
-        btn.addEventListener('mouseenter', function() {
-            // Teleport to random position within button area
-            offsetX = (Math.random() - 0.5) * 500; // Wide range
-            offsetY = (Math.random() - 0.5) * 80;
-            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-        });
+        // Extra safety listeners
+        btn.addEventListener('mouseenter', teleportButton);
+        btn.addEventListener('mouseover', teleportButton);
         
-        // Extra safety: also trigger on mouseover
-        btn.addEventListener('mouseover', function() {
+        function teleportButton() {
             offsetX = (Math.random() - 0.5) * 500;
             offsetY = (Math.random() - 0.5) * 80;
             btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-        });
+        }
     </script>
 </body>
 </html>
