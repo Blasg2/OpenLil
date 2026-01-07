@@ -437,8 +437,8 @@
             
             if (isInside) {
                 // INSTANT TELEPORT
-                offsetX = (Math.random() - 0.5) * 960;
-                offsetY = (Math.random() - 0.5) * 160;
+                offsetX = (Math.random() - 0.5) * 800;
+                offsetY = (Math.random() - 0.5) * 120;
                 btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
             } else {
                 // Check proximity (80px)
@@ -458,9 +458,9 @@
                     offsetX -= Math.cos(adjustedAngle) * moveDistance;
                     offsetY -= Math.sin(adjustedAngle) * moveDistance;
                     
-                    // Expanded limits - can go to edges
-                    offsetX = Math.max(-480, Math.min(480, offsetX));
-                    offsetY = Math.max(-80, Math.min(80, offsetY));
+                    // Adjusted limits - stays inside container
+                    offsetX = Math.max(-400, Math.min(400, offsetX));
+                    offsetY = Math.max(-60, Math.min(60, offsetY));
                     
                     btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
                 }
@@ -472,8 +472,8 @@
         btn.addEventListener('mouseover', teleportButton);
         
         function teleportButton() {
-            offsetX = (Math.random() - 0.5) * 960;
-            offsetY = (Math.random() - 0.5) * 160;
+            offsetX = (Math.random() - 0.5) * 800;
+            offsetY = (Math.random() - 0.5) * 120;
             btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
         }
     </script>
