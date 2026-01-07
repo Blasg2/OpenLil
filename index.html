@@ -44,11 +44,11 @@
         }
         
         .cover-image {
-            max-width: 750px;  /* Add this to limit the size */
+            max-width: 750px;
             width: 100%;
             height: auto;
             border-radius: 10px;
-            margin: 20px auto;  /* Changed to center it */
+            margin: 20px auto;
             display: block;
         }
         
@@ -88,7 +88,7 @@
             box-shadow: 0 8px 20px rgba(17, 153, 142, 0.6);
         }
         
-        /* TIMER - REBUILT FROM SCRATCH */
+        /* TIMER */
         .timer-wrapper {
             background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
             border-radius: 20px;
@@ -274,20 +274,30 @@
         }
 
         /* Decoration images */
-        .decoration-image {
-            position: fixed;
-            width: 300px;
+        .decoration-link {
+            position: absolute;
             z-index: 1;
+        }
+        
+        .decoration-image {
+            width: 300px;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .decoration-image:hover {
+            transform: scale(1.05);
         }
         
         .decoration-left {
             top: 20px;
-            left: 1050px;
+            left: calc(100% + 50px);
         }
         
         .decoration-right {
             bottom: 20px;
-            right: 20px;
+            right: calc(100% + 50px);
         }
         
         /* Responsive adjustments */
@@ -305,9 +315,12 @@
     </style>
 </head>
 <body>
-    <img src="images/Isanja.png" class="decoration-image decoration-left" alt="decoration">
-    
     <div class="wrapper">
+        <!-- Decoration image with link -->
+        <a href="https://www.instagram.com/draisatorres/" target="_blank" class="decoration-link decoration-left">
+            <img src="images/Isanja.png" class="decoration-image" alt="decoration">
+        </a>
+        
         <div class="container">
             <h1>🚀</h1>
             
@@ -319,7 +332,7 @@
                 <button id="downloadBtn">Download</button>
             </div>
             
-            <!-- REBUILT TIMER -->
+            <!-- TIMER -->
             <div class="timer-wrapper">
                 <div class="timer-grid">
                     <!-- Days -->
@@ -440,19 +453,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
