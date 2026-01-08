@@ -900,15 +900,29 @@ const colors = [
             
             const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
+            // Process message to highlight transformed "lil" words in red
+            let messageHtml = '';
+            if (msg.transformedIndices && msg.transformedIndices.length > 0) {
+                const words = msg.message.split(' ');
+                messageHtml = words.map((word, index) => {
+                    if (msg.transformedIndices.includes(index)) {
+                        return `<span style="color: red; font-weight: bold;">${escapeHtml(word)}</span>`;
+                    }
+                    return escapeHtml(word);
+                }).join(' ');
+            } else {
+                messageHtml = escapeHtml(msg.message);
+            }
+            
             div.innerHTML = `
                 <div class="chat-nickname" style="color: ${msg.color}">${escapeHtml(msg.nickname)}</div>
-                <div class="chat-text">${escapeHtml(msg.message)}</div>
+                <div class="chat-text">${messageHtml}</div>
                 <div class="chat-timestamp">${time}</div>
             `;
             
             return div;
         }
-
+        
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -916,8 +930,18 @@ const colors = [
             if (!message) return;
             
             const words = message.split(' ');
-            const transformedWords = words.map(word => {
-                return Math.random() < 0.05 ? 'lil' : word;
+            const transformedIndices = [];
+            const transformedWords = words.map((word, index) => {
+                // Skip transformation if word is already "lil" (case insensitive)
+                if (word.toLowerCase() === 'lil') {
+                    return word;
+                }
+                // 5% chance to transform to "lil"
+                if (Math.random() < 0.05) {
+                    transformedIndices.push(index);
+                    return 'lil';
+                }
+                return word;
             });
             const finalMessage = transformedWords.join(' ');
             
@@ -925,14 +949,15 @@ const colors = [
                 nickname: userNickname,
                 message: finalMessage,
                 color: userColor,
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                transformedIndices: transformedIndices  // Store which words were transformed
             });
             
             input.value = '';
             
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
+         }
 
         function toggleChat() {
             isCollapsed = !isCollapsed;
@@ -972,4 +997,5 @@ const colors = [
     </script>
 </body>
 </html>
+
 
