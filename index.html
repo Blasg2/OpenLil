@@ -333,6 +333,467 @@
         
         <div class="container">
             <h1>🚀</h1>
+
+            <!-- FIREBASE CHAT - ADD THIS BEFORE THE COVER IMAGE -->
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+/* Chat Widget Styles */
+#chatWidget {
+    width: 100%;
+    max-width: 750px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+#chatHeader {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#chatToggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+#chatBody {
+    display: flex;
+    flex-direction: column;
+    height: 400px;
+}
+
+.chat-collapsed #chatBody {
+    display: none;
+}
+
+#chatMessages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+    background: #f5f5f5;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.chat-message {
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-nickname {
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.chat-text {
+    background: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-top: 3px;
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+.chat-timestamp {
+    font-size: 10px;
+    color: #999;
+    margin-top: 2px;
+}
+
+#chatInput {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    gap: 8px;
+}
+
+#messageInput {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+    font-size: 14px;
+}
+
+#sendBtn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#sendBtn:hover {
+    opacity: 0.9;
+}
+
+#sendBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Nickname Setup Inside Chat */
+#nicknameSetup {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 30px;
+    background: #f5f5f5;
+}
+
+#nicknameSetup h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+#nicknameSetup input {
+    width: 100%;
+    max-width: 250px;
+    padding: 10px;
+    border: 2px solid #667eea;
+    border-radius: 10px;
+    font-size: 16px;
+    margin-bottom: 15px;
+    outline: none;
+}
+
+#nicknameSetup button {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+#nicknameSetup button:hover {
+    opacity: 0.9;
+}
+
+#loadMoreBtn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px;
+    margin: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#loadMoreBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+
+<script>
+// ==========================================
+// FIREBASE CONFIG - REPLACE WITH YOUR KEYS
+// ==========================================
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+const messagesRef = database.ref('messages');
+
+// Chat State
+let userNickname = null;
+let userColor = null;
+let userId = null;
+let isCollapsed = false;
+let oldestLoadedTimestamp = null;
+let isLoadingMore = false;
+
+// Color Palette
+const colors = [
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
+    '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788',
+    '#FF9FF3', '#54A0FF', '#48DBfB', '#FF6348', '#1DD1A1',
+    '#F368E0', '#FF9F43', '#EE5A6F', '#00D2D3', '#5F27CD'
+];
+
+// Generate unique user ID
+userId = 'user_' + Math.random().toString(36).substr(2, 9);
+
+// Check for existing nickname
+const savedNickname = sessionStorage.getItem('chatNickname');
+const savedColor = sessionStorage.getItem('chatColor');
+
+if (savedNickname && savedColor) {
+    userNickname = savedNickname;
+    userColor = savedColor;
+    showChatInterface();
+} else {
+    showNicknameSetup();
+}
+
+// Show Nickname Setup
+function showNicknameSetup() {
+    document.getElementById('nicknameSetup').style.display = 'flex';
+    document.getElementById('chatInterface').style.display = 'none';
+}
+
+// Show Chat Interface
+function showChatInterface() {
+    document.getElementById('nicknameSetup').style.display = 'none';
+    document.getElementById('chatInterface').style.display = 'flex';
+    initChat();
+}
+
+// Set Nickname and assign unique color
+async function setNickname() {
+    const input = document.getElementById('nicknameInput');
+    const nickname = input.value.trim();
+    
+    if (nickname.length < 2) {
+        alert('Nickname must be at least 2 characters!');
+        return;
+    }
+    
+    userNickname = nickname;
+    
+    // Get active users' colors
+    const snapshot = await database.ref('activeUsers').once('value');
+    const activeUsers = snapshot.val() || {};
+    const usedColors = Object.values(activeUsers).map(u => u.color);
+    
+    // Find available color
+    let availableColors = colors.filter(c => !usedColors.includes(c));
+    if (availableColors.length === 0) availableColors = colors; // All taken, allow duplicates
+    
+    userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+    
+    // Save to session
+    sessionStorage.setItem('chatNickname', userNickname);
+    sessionStorage.setItem('chatColor', userColor);
+    
+    // Register as active user
+    database.ref('activeUsers/' + userId).set({
+        nickname: userNickname,
+        color: userColor,
+        timestamp: Date.now()
+    });
+    
+    // Remove on disconnect
+    database.ref('activeUsers/' + userId).onDisconnect().remove();
+    
+    showChatInterface();
+}
+
+// Initialize Chat
+function initChat() {
+    loadMessages();
+    
+    // Enter to send
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    // Auto-scroll detection
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.addEventListener('scroll', () => {
+        if (chatMessages.scrollTop === 0 && !isLoadingMore) {
+            // User scrolled to top
+            document.getElementById('loadMoreBtn').style.display = 'block';
+        }
+    });
+}
+
+// Load Messages (last 100)
+function loadMessages() {
+    messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
+        const messages = [];
+        snapshot.forEach((child) => {
+            messages.push({ id: child.key, ...child.val() });
+        });
+        
+        // Track oldest message for pagination
+        if (messages.length > 0) {
+            oldestLoadedTimestamp = messages[0].timestamp;
+        }
+        
+        displayMessages(messages);
+    });
+}
+
+// Load More Messages
+async function loadMoreMessages() {
+    if (isLoadingMore || !oldestLoadedTimestamp) return;
+    
+    isLoadingMore = true;
+    document.getElementById('loadMoreBtn').disabled = true;
+    document.getElementById('loadMoreBtn').textContent = 'Loading...';
+    
+    const snapshot = await messagesRef
+        .orderByChild('timestamp')
+        .endBefore(oldestLoadedTimestamp)
+        .limitToLast(100)
+        .once('value');
+    
+    const olderMessages = [];
+    snapshot.forEach((child) => {
+        olderMessages.push({ id: child.key, ...child.val() });
+    });
+    
+    if (olderMessages.length > 0) {
+        oldestLoadedTimestamp = olderMessages[0].timestamp;
+        
+        // Append older messages
+        const chatMessages = document.getElementById('chatMessages');
+        olderMessages.reverse().forEach(msg => {
+            const msgEl = createMessageElement(msg);
+            chatMessages.appendChild(msgEl);
+        });
+    } else {
+        document.getElementById('loadMoreBtn').textContent = 'No more messages';
+        setTimeout(() => {
+            document.getElementById('loadMoreBtn').style.display = 'none';
+        }, 2000);
+    }
+    
+    isLoadingMore = false;
+    document.getElementById('loadMoreBtn').disabled = false;
+    document.getElementById('loadMoreBtn').textContent = 'Load More Messages';
+}
+
+// Display Messages
+function displayMessages(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    
+    // Clear except load more button
+    chatMessages.innerHTML = '';
+    chatMessages.appendChild(loadMoreBtn);
+    
+    messages.reverse().forEach(msg => {
+        const msgEl = createMessageElement(msg);
+        chatMessages.appendChild(msgEl);
+    });
+}
+
+// Create Message Element
+function createMessageElement(msg) {
+    const div = document.createElement('div');
+    div.className = 'chat-message';
+    
+    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    div.innerHTML = `
+        <div class="chat-nickname" style="color: ${msg.color}">${escapeHtml(msg.nickname)}</div>
+        <div class="chat-text">${escapeHtml(msg.message)}</div>
+        <div class="chat-timestamp">${time}</div>
+    `;
+    
+    return div;
+}
+
+// Send Message with "lil" transformation
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Apply 5% "lil" transformation per word
+    const words = message.split(' ');
+    const transformedWords = words.map(word => {
+        return Math.random() < 0.05 ? 'lil' : word;
+    });
+    const finalMessage = transformedWords.join(' ');
+    
+    // Send to Firebase
+    messagesRef.push({
+        nickname: userNickname,
+        message: finalMessage,
+        color: userColor,
+        timestamp: Date.now()
+    });
+    
+    input.value = '';
+    
+    // Scroll to bottom
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Toggle Chat
+function toggleChat() {
+    isCollapsed = !isCollapsed;
+    const widget = document.getElementById('chatWidget');
+    const toggle = document.getElementById('chatToggle');
+    
+    if (isCollapsed) {
+        widget.classList.add('chat-collapsed');
+        toggle.textContent = '+';
+    } else {
+        widget.classList.remove('chat-collapsed');
+        toggle.textContent = '−';
+    }
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Allow Enter key in nickname input
+document.addEventListener('DOMContentLoaded', () => {
+    const nicknameInput = document.getElementById('nicknameInput');
+    if (nicknameInput) {
+        nicknameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') setNickname();
+        });
+    }
+});
+
+// Cleanup old messages (runs once per session)
+setTimeout(() => {
+    const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7 days
+    messagesRef.orderByChild('timestamp').endAt(cutoff).once('value', (snapshot) => {
+        snapshot.forEach((child) => child.ref.remove());
+    });
+}, 5000);
+</script>
             
             <img src="images/cover11.png" alt="capa" class="cover-image">
             
@@ -487,483 +948,7 @@
             btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
         }
     </script>
-
-<!-- FIREBASE CHAT - ADD THIS BEFORE </body> -->
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-<style>
-/* Chat Widget Styles */
-#chatWidget {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 350px;
-    max-height: 500px;
-    background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    z-index: 10000;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-#chatHeader {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 15px;
-    border-radius: 15px 15px 0 0;
-    font-weight: bold;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#chatToggle {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-#chatBody {
-    display: flex;
-    flex-direction: column;
-    height: 400px;
-}
-
-#chatMessages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 15px;
-    background: #f5f5f5;
-    display: flex;
-    flex-direction: column-reverse;
-}
-
-.chat-message {
-    margin-bottom: 10px;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.chat-nickname {
-    font-weight: bold;
-    font-size: 12px;
-}
-
-.chat-text {
-    background: white;
-    padding: 8px 12px;
-    border-radius: 10px;
-    margin-top: 3px;
-    word-wrap: break-word;
-    font-size: 14px;
-}
-
-.chat-timestamp {
-    font-size: 10px;
-    color: #999;
-    margin-top: 2px;
-}
-
-#chatInput {
-    display: flex;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-    gap: 8px;
-}
-
-#messageInput {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    outline: none;
-    font-size: 14px;
-}
-
-#sendBtn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-#sendBtn:hover {
-    opacity: 0.9;
-}
-
-#sendBtn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Nickname Modal */
-#nicknameModal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10001;
-}
-
-#nicknameBox {
-    background: white;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    text-align: center;
-    max-width: 300px;
-}
-
-#nicknameBox h3 {
-    margin: 0 0 20px 0;
-    color: #333;
-}
-
-#nicknameBox input {
-    width: 100%;
-    padding: 10px;
-    border: 2px solid #667eea;
-    border-radius: 10px;
-    font-size: 16px;
-    margin-bottom: 15px;
-    outline: none;
-}
-
-#nicknameBox button {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 10px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-#loadMoreBtn {
-    background: #667eea;
-    color: white;
-    border: none;
-    padding: 8px;
-    margin: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-#loadMoreBtn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.chat-collapsed #chatBody {
-    display: none;
-}
-</style>
-
-<!-- Chat Widget HTML -->
-<div id="chatWidget">
-    <div id="chatHeader" onclick="toggleChat()">
-        <span>💬 Live Chat</span>
-        <span id="chatToggle">−</span>
-    </div>
-    <div id="chatBody">
-        <div id="chatMessages">
-            <button id="loadMoreBtn" onclick="loadMoreMessages()">Load More Messages</button>
-        </div>
-        <div id="chatInput">
-            <input type="text" id="messageInput" placeholder="Type a message..." maxlength="500" />
-            <button id="sendBtn" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
-</div>
-
-<!-- Nickname Modal -->
-<div id="nicknameModal" style="display: none;">
-    <div id="nicknameBox">
-        <h3>Choose Your Nickname</h3>
-        <input type="text" id="nicknameInput" placeholder="Enter nickname..." maxlength="20" />
-        <button onclick="setNickname()">Join Chat</button>
-    </div>
-</div>
-
-<script>
-// ==========================================
-// FIREBASE CONFIG - REPLACE WITH YOUR KEYS
-// ==========================================
-const firebaseConfig = {
-    apiKey: "AIzaSyAzpUnWhMkePhLgwf22aA8YUzrUJUc_RlE",
-    authDomain: "lilslife.firebaseapp.com",
-    databaseURL: "https://lilslife-default-rtdb.firebaseio.com",
-    projectId: "lilslife",
-    storageBucket: "lilslife.firebasestorage.app",
-    messagingSenderId: "731094352991",
-    appId: "1:731094352991:web:6ac2b5b02253f4915947ea"
-};
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
-const messagesRef = database.ref('messages');
-
-// Chat State
-let userNickname = null;
-let userColor = null;
-let userId = null;
-let isCollapsed = false;
-let oldestLoadedTimestamp = null;
-let isLoadingMore = false;
-
-// Color Palette
-const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-    '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B739', '#52B788',
-    '#FF9FF3', '#54A0FF', '#48DBfB', '#FF6348', '#1DD1A1',
-    '#F368E0', '#FF9F43', '#EE5A6F', '#00D2D3', '#5F27CD'
-];
-
-// Generate unique user ID
-userId = 'user_' + Math.random().toString(36).substr(2, 9);
-
-// Check for existing nickname
-const savedNickname = sessionStorage.getItem('chatNickname');
-const savedColor = sessionStorage.getItem('chatColor');
-
-if (savedNickname && savedColor) {
-    userNickname = savedNickname;
-    userColor = savedColor;
-    initChat();
-} else {
-    document.getElementById('nicknameModal').style.display = 'flex';
-}
-
-// Set Nickname and assign unique color
-async function setNickname() {
-    const input = document.getElementById('nicknameInput');
-    const nickname = input.value.trim();
-    
-    if (nickname.length < 2) {
-        alert('Nickname must be at least 2 characters!');
-        return;
-    }
-    
-    userNickname = nickname;
-    
-    // Get active users' colors
-    const snapshot = await database.ref('activeUsers').once('value');
-    const activeUsers = snapshot.val() || {};
-    const usedColors = Object.values(activeUsers).map(u => u.color);
-    
-    // Find available color
-    let availableColors = colors.filter(c => !usedColors.includes(c));
-    if (availableColors.length === 0) availableColors = colors; // All taken, allow duplicates
-    
-    userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-    
-    // Save to session
-    sessionStorage.setItem('chatNickname', userNickname);
-    sessionStorage.setItem('chatColor', userColor);
-    
-    // Register as active user
-    database.ref('activeUsers/' + userId).set({
-        nickname: userNickname,
-        color: userColor,
-        timestamp: Date.now()
-    });
-    
-    // Remove on disconnect
-    database.ref('activeUsers/' + userId).onDisconnect().remove();
-    
-    document.getElementById('nicknameModal').style.display = 'none';
-    initChat();
-}
-
-// Initialize Chat
-function initChat() {
-    loadMessages();
-    
-    // Enter to send
-    document.getElementById('messageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-    
-    // Auto-scroll detection
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.addEventListener('scroll', () => {
-        if (chatMessages.scrollTop === 0 && !isLoadingMore) {
-            // User scrolled to top
-            document.getElementById('loadMoreBtn').style.display = 'block';
-        }
-    });
-}
-
-// Load Messages (last 100)
-function loadMessages() {
-    messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
-        const messages = [];
-        snapshot.forEach((child) => {
-            messages.push({ id: child.key, ...child.val() });
-        });
-        
-        // Track oldest message for pagination
-        if (messages.length > 0) {
-            oldestLoadedTimestamp = messages[0].timestamp;
-        }
-        
-        displayMessages(messages);
-    });
-}
-
-// Load More Messages
-async function loadMoreMessages() {
-    if (isLoadingMore || !oldestLoadedTimestamp) return;
-    
-    isLoadingMore = true;
-    document.getElementById('loadMoreBtn').disabled = true;
-    document.getElementById('loadMoreBtn').textContent = 'Loading...';
-    
-    const snapshot = await messagesRef
-        .orderByChild('timestamp')
-        .endBefore(oldestLoadedTimestamp)
-        .limitToLast(100)
-        .once('value');
-    
-    const olderMessages = [];
-    snapshot.forEach((child) => {
-        olderMessages.push({ id: child.key, ...child.val() });
-    });
-    
-    if (olderMessages.length > 0) {
-        oldestLoadedTimestamp = olderMessages[0].timestamp;
-        
-        // Append older messages
-        const chatMessages = document.getElementById('chatMessages');
-        olderMessages.reverse().forEach(msg => {
-            const msgEl = createMessageElement(msg);
-            chatMessages.appendChild(msgEl);
-        });
-    } else {
-        document.getElementById('loadMoreBtn').textContent = 'No more messages';
-        setTimeout(() => {
-            document.getElementById('loadMoreBtn').style.display = 'none';
-        }, 2000);
-    }
-    
-    isLoadingMore = false;
-    document.getElementById('loadMoreBtn').disabled = false;
-    document.getElementById('loadMoreBtn').textContent = 'Load More Messages';
-}
-
-// Display Messages
-function displayMessages(messages) {
-    const chatMessages = document.getElementById('chatMessages');
-    const loadMoreBtn = document.getElementById('loadMoreBtn');
-    
-    // Clear except load more button
-    chatMessages.innerHTML = '';
-    chatMessages.appendChild(loadMoreBtn);
-    
-    messages.reverse().forEach(msg => {
-        const msgEl = createMessageElement(msg);
-        chatMessages.appendChild(msgEl);
-    });
-}
-
-// Create Message Element
-function createMessageElement(msg) {
-    const div = document.createElement('div');
-    div.className = 'chat-message';
-    
-    const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    div.innerHTML = `
-        <div class="chat-nickname" style="color: ${msg.color}">${msg.nickname}</div>
-        <div class="chat-text">${escapeHtml(msg.message)}</div>
-        <div class="chat-timestamp">${time}</div>
-    `;
-    
-    return div;
-}
-
-// Send Message with "lil" transformation
-function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    // Apply 5% "lil" transformation per word
-    const words = message.split(' ');
-    const transformedWords = words.map(word => {
-        return Math.random() < 0.05 ? 'lil' : word;
-    });
-    const finalMessage = transformedWords.join(' ');
-    
-    // Send to Firebase
-    messagesRef.push({
-        nickname: userNickname,
-        message: finalMessage,
-        color: userColor,
-        timestamp: Date.now()
-    });
-    
-    input.value = '';
-    
-    // Scroll to bottom
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// Toggle Chat
-function toggleChat() {
-    isCollapsed = !isCollapsed;
-    const widget = document.getElementById('chatWidget');
-    const toggle = document.getElementById('chatToggle');
-    
-    if (isCollapsed) {
-        widget.classList.add('chat-collapsed');
-        toggle.textContent = '+';
-    } else {
-        widget.classList.remove('chat-collapsed');
-        toggle.textContent = '−';
-    }
-}
-
-// Escape HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Cleanup old messages (runs once per session)
-setTimeout(() => {
-    const cutoff = Date.now() - (7 * 24 * 60 * 60 * 1000); // 7 days
-    messagesRef.orderByChild('timestamp').endAt(cutoff).once('value', (snapshot) => {
-        snapshot.forEach((child) => child.ref.remove());
-    });
-}, 5000);
-</script>
 </body>
 </html>
+
 
