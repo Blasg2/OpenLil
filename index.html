@@ -869,22 +869,33 @@
             }
         }
 
-        function initChat() {
-            loadMessages();
-            
-            document.getElementById('messageInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
-            });
-            
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.addEventListener('scroll', () => {
-                // Check if scrolled to top (remember it's reversed)
-                const isAtTop = chatMessages.scrollHeight + chatMessages.scrollTop <= chatMessages.clientHeight + 50;
-                if (isAtTop && !isLoadingMore && hasMoreMessages) {
-                    document.getElementById('loadMoreBtn').style.display = 'block';
-                }
-            });
+function initChat() {
+    loadMessages();
+    
+    document.getElementById('messageInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+    
+    const chatMessages = document.getElementById('chatMessages');
+    let lastScrollTop = chatMessages.scrollTop;
+    
+    chatMessages.addEventListener('scroll', () => {
+        const scrollTop = chatMessages.scrollTop;
+        const scrollHeight = chatMessages.scrollHeight;
+        const clientHeight = chatMessages.clientHeight;
+        
+        // Calculate distance from top (in reversed flex, top = old messages)
+        const distanceFromTop = scrollHeight + scrollTop - clientHeight;
+        
+        // If scrolled up more than 100px from bottom, show load more button
+        if (distanceFromTop < -100 && !isLoadingMore && hasMoreMessages && scrollTop < lastScrollTop) {
+            // Auto-load more messages
+            loadMoreMessages();
         }
+        
+        lastScrollTop = scrollTop;
+    });
+}
 
         function loadMessages() {
             messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
@@ -1215,4 +1226,5 @@
 
 </body>
 </html>
+
 
