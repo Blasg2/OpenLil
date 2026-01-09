@@ -522,6 +522,18 @@
         
         /* Responsive adjustments */
         @media (max-width: 900px) {
+            body {
+                padding: 10px;
+            }
+            
+            .wrapper {
+                padding-bottom: 180px; /* Make space for decoration images at bottom */
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
             .timer-grid {
                 gap: 8px;
             }
@@ -530,6 +542,109 @@
             }
             .character-img {
                 width: 140px;
+            }
+            
+            /* CHAT MOBILE FIXES */
+            #chatWidget {
+                margin: 10px 0;
+                max-width: 100%;
+            }
+            
+            #chatMessages {
+                padding: 10px;
+            }
+            
+            .chat-text {
+                max-width: 100%;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+            
+            .chat-image {
+                max-width: 100%;
+                width: 100%;
+            }
+            
+            #chatInput {
+                padding: 8px;
+                gap: 5px;
+            }
+            
+            #messageInput {
+                font-size: 16px;
+                min-width: 0;
+            }
+            
+            #imageBtn {
+                padding: 10px 12px;
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+            
+            #sendBtn {
+                padding: 10px 15px;
+                font-size: 14px;
+                flex-shrink: 0;
+            }
+            
+            .cover-image {
+                max-width: 100%;
+            }
+            
+            /* DECORATION IMAGES AT BOTTOM - SIDE BY SIDE */
+            .decoration-link {
+                position: fixed;
+                bottom: 20px;
+                left: auto;
+                right: auto;
+                top: auto;
+                z-index: 1000;
+            }
+            
+            .decoration-left {
+                left: calc(50% - 90px); /* Left of center */
+            }
+            
+            .decoration-left-below {
+                left: calc(50% + 10px); /* Right of center */
+                top: auto;
+                bottom: 20px;
+            }
+            
+            .decoration-image {
+                width: 80px; /* Smaller on mobile */
+            }
+        }
+
+        /* Extra small phones */
+        @media (max-width: 400px) {
+            #chatWidget {
+                font-size: 14px;
+            }
+            
+            .chat-nickname {
+                font-size: 11px;
+            }
+            
+            .chat-text {
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+            
+            #sendBtn {
+                padding: 10px;
+            }
+            
+            .decoration-image {
+                width: 70px; /* Even smaller on tiny phones */
+            }
+            
+            .decoration-left {
+                left: calc(50% - 75px);
+            }
+            
+            .decoration-left-below {
+                left: calc(50% + 5px);
             }
         }
     </style>
@@ -627,7 +742,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
- <script>
+    <script>
         // ==========================================
         // COUNTDOWN TIMER
         // ==========================================
@@ -869,33 +984,32 @@
             }
         }
 
-function initChat() {
-    loadMessages();
-    
-    document.getElementById('messageInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
-    
-    const chatMessages = document.getElementById('chatMessages');
-    let lastScrollTop = chatMessages.scrollTop;
-    
-    chatMessages.addEventListener('scroll', () => {
-        const scrollTop = chatMessages.scrollTop;
-        const scrollHeight = chatMessages.scrollHeight;
-        const clientHeight = chatMessages.clientHeight;
-        
-        // Calculate distance from top (in reversed flex, top = old messages)
-        const distanceFromTop = scrollHeight + scrollTop - clientHeight;
-        
-        // If scrolled up more than 100px from bottom, show load more button
-        if (distanceFromTop < -100 && !isLoadingMore && hasMoreMessages && scrollTop < lastScrollTop) {
-            // Auto-load more messages
-            loadMoreMessages();
+        function initChat() {
+            loadMessages();
+            
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            const chatMessages = document.getElementById('chatMessages');
+            
+            chatMessages.addEventListener('scroll', () => {
+                const scrollTop = chatMessages.scrollTop;
+                const scrollHeight = chatMessages.scrollHeight;
+                const clientHeight = chatMessages.clientHeight;
+                
+                // Distance from top in reversed container
+                const distanceFromTop = scrollHeight + scrollTop - clientHeight;
+                
+                // Show button only when scrolled UP close to top
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
+                    loadMoreBtn.style.display = 'block';
+                } else {
+                    loadMoreBtn.style.display = 'none';
+                }
+            });
         }
-        
-        lastScrollTop = scrollTop;
-    });
-}
 
         function loadMessages() {
             messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
@@ -969,7 +1083,7 @@ function initChat() {
             
             chatMessages.innerHTML = '';
             chatMessages.appendChild(loadMoreBtn);
-            loadMoreBtn.style.display = 'none'; // Hide by default
+            loadMoreBtn.style.display = 'none';
             
             messages.reverse().forEach(msg => {
                 const msgEl = createMessageElement(msg);
@@ -985,11 +1099,9 @@ function initChat() {
             
             let messageContent = '';
             
-            // If message is an image
             if (msg.imageUrl) {
                 messageContent = `<img src="${escapeHtml(msg.imageUrl)}" class="chat-image" onclick="window.open('${escapeHtml(msg.imageUrl)}', '_blank')" alt="Shared image" onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=\\'color: red;\\'>Image failed to load</div>'">`;
             } else if (msg.message) {
-                // Process text message with "lil" highlighting
                 if (msg.transformedIndices && msg.transformedIndices.length > 0) {
                     const words = msg.message.split(' ');
                     messageContent = words.map((word, index) => {
@@ -1053,35 +1165,29 @@ function initChat() {
             const file = event.target.files[0];
             if (!file) return;
 
-            // Check if it's an image
             if (!file.type.startsWith('image/')) {
                 alert('Please select an image file!');
                 return;
             }
 
-            // Show upload status
             const statusEl = document.getElementById('uploadStatus');
             statusEl.style.display = 'block';
             statusEl.textContent = 'Compressing image...';
 
-            // Disable buttons during upload
             document.getElementById('imageBtn').disabled = true;
             document.getElementById('sendBtn').disabled = true;
 
             try {
-                // Compress image to 2MB
                 const compressedFile = await compressImage(file, 2 * 1024 * 1024);
                 
                 statusEl.textContent = 'Uploading...';
                 
-                // Upload to ImgBB
                 const imageUrl = await uploadToImgBB(compressedFile);
                 
-                console.log('Image uploaded:', imageUrl); // Debug
+                console.log('Image uploaded:', imageUrl);
                 
                 statusEl.textContent = 'Sending...';
                 
-                // Send to chat
                 await messagesRef.push({
                     nickname: userNickname,
                     imageUrl: imageUrl,
@@ -1094,7 +1200,6 @@ function initChat() {
                     statusEl.style.display = 'none';
                 }, 2000);
                 
-                // Scroll to bottom
                 const chatMessages = document.getElementById('chatMessages');
                 setTimeout(() => {
                     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1108,11 +1213,9 @@ function initChat() {
                 }, 3000);
             }
 
-            // Re-enable buttons
             document.getElementById('imageBtn').disabled = false;
             document.getElementById('sendBtn').disabled = false;
 
-            // Reset file input
             event.target.value = '';
         }
 
@@ -1126,7 +1229,6 @@ function initChat() {
                         let width = img.width;
                         let height = img.height;
                         
-                        // Max dimensions
                         const maxDimension = 1920;
                         if (width > maxDimension || height > maxDimension) {
                             if (width > height) {
@@ -1144,7 +1246,6 @@ function initChat() {
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, width, height);
                         
-                        // Try different quality levels until under 2MB
                         let quality = 0.9;
                         let blob;
                         
@@ -1223,8 +1324,5 @@ function initChat() {
             });
         }, 5000);
     </script>
-
 </body>
 </html>
-
-
