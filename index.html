@@ -549,7 +549,7 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 80%;
+            height: 90%;
             background: white;
             z-index: 9999;
             border-radius: 20px 20px 0 0;
@@ -710,46 +710,47 @@
                 display: none !important;
             }
         }
+
         /* MAKE BOTTOM SHEET TEXT BIGGER */
-#bottomSheetMessages .chat-nickname {
-    font-size: 14px !important;
-    font-weight: bold;
-}
+        #bottomSheetMessages .chat-nickname {
+            font-size: 14px !important;
+            font-weight: bold;
+        }
 
-#bottomSheetMessages .chat-text {
-    font-size: 16px !important;
-    padding: 12px 16px !important;
-}
+        #bottomSheetMessages .chat-text {
+            font-size: 16px !important;
+            padding: 12px 16px !important;
+        }
 
-#bottomSheetMessages .chat-timestamp {
-    font-size: 12px !important;
-}
+        #bottomSheetMessages .chat-timestamp {
+            font-size: 12px !important;
+        }
 
-#bottomSheetMessages .chat-message {
-    margin-bottom: 15px !important;
-}
+        #bottomSheetMessages .chat-message {
+            margin-bottom: 15px !important;
+        }
 
-#bottomSheetMessageInput {
-    font-size: 18px !important;
-    padding: 16px !important;
-}
+        #bottomSheetMessageInput {
+            font-size: 18px !important;
+            padding: 16px !important;
+        }
 
-#bottomSheetBody button {
-    font-size: 18px !important;
-    padding: 16px 28px !important;
-}
+        #bottomSheetBody button {
+            font-size: 18px !important;
+            padding: 16px 28px !important;
+        }
 
-#bottomSheetHeader {
-    font-size: 18px !important;
-    padding: 18px 20px !important;
-}
+        #bottomSheetHeader {
+            font-size: 18px !important;
+            padding: 18px 20px !important;
+        }
 
-/* Camera button bigger */
-#bottomSheetBody input[type="file"] + button {
-    width: 55px !important;
-    height: 55px !important;
-    font-size: 24px !important;
-}
+        /* Camera button bigger */
+        #bottomSheetBody input[type="file"] + button {
+            width: 55px !important;
+            height: 55px !important;
+            font-size: 24px !important;
+        }
     </style>
 </head>
 <body>
@@ -780,7 +781,7 @@
             <h1>🚀</h1>
             
             <!-- CHAT WIDGET -->
-            <div id="chatWidget" onclick="openBottomSheetMobile()">
+            <div id="chatWidget">
                 <div id="chatHeader" onclick="toggleChat()">
                     <span>💬 Live Chat</span>
                     <span id="chatToggle">−</span>
@@ -1047,21 +1048,27 @@
         }
 
         // ==========================================
-        // BOTTOM SHEET FUNCTIONS
+        // UTILITY FUNCTIONS
         // ==========================================
         function isMobile() {
             return window.innerWidth <= 900;
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ==========================================
+        // BOTTOM SHEET FUNCTIONS
+        // ==========================================
         let touchStartY = 0;
         let touchCurrentY = 0;
         let isDragging = false;
 
         function openBottomSheetMobile() {
-            // On desktop, just return and do nothing
-            if (!isMobile()) {
-                return;
-            }
+            if (!isMobile()) return;
             
             const overlay = document.getElementById('bottomSheetOverlay');
             const sheet = document.getElementById('bottomSheet');
@@ -1093,7 +1100,6 @@
             sheet.classList.add('active');
             isBottomSheetOpen = true;
             
-            // Setup swipe to close
             setupSwipeToClose();
         }
 
@@ -1145,26 +1151,17 @@
                 </div>
             `;
             
-        function loadMessagesBottomSheet() {
-            // Remove any existing listener first
-            messagesRef.off();
+            loadMessagesBottomSheet();
             
-            // Set up real-time listener
-            messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
-                const messages = [];
-                snapshot.forEach((child) => {
-                    messages.push({ id: child.key, ...child.val() });
-                });
-                
-                if (messages.length > 0) {
-                    oldestLoadedTimestamp = messages[0].timestamp;
+            setTimeout(() => {
+                const input = document.getElementById('bottomSheetMessageInput');
+                if (input) {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') sendMessageBottomSheet();
+                    });
+                    input.focus();
                 }
-                
-                displayMessagesBottomSheet(messages);
-                
-                // Also update regular chat if it exists
-                displayMessages(messages);
-            });
+            }, 100);
         }
 
         async function setNicknameBottomSheet() {
@@ -1379,26 +1376,30 @@
         function initChat() {
             loadMessages();
             
-            document.getElementById('messageInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
-            });
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') sendMessage();
+                });
+            }
             
             const chatMessages = document.getElementById('chatMessages');
-            
-            chatMessages.addEventListener('scroll', () => {
-                const scrollTop = chatMessages.scrollTop;
-                const scrollHeight = chatMessages.scrollHeight;
-                const clientHeight = chatMessages.clientHeight;
-                
-                const distanceFromTop = scrollHeight + scrollTop - clientHeight;
-                
-                const loadMoreBtn = document.getElementById('loadMoreBtn');
-                if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
-                    loadMoreBtn.style.display = 'block';
-                } else {
-                    loadMoreBtn.style.display = 'none';
-                }
-            });
+            if (chatMessages) {
+                chatMessages.addEventListener('scroll', () => {
+                    const scrollTop = chatMessages.scrollTop;
+                    const scrollHeight = chatMessages.scrollHeight;
+                    const clientHeight = chatMessages.clientHeight;
+                    
+                    const distanceFromTop = scrollHeight + scrollTop - clientHeight;
+                    
+                    const loadMoreBtn = document.getElementById('loadMoreBtn');
+                    if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
+                        loadMoreBtn.style.display = 'block';
+                    } else {
+                        loadMoreBtn.style.display = 'none';
+                    }
+                });
+            }
         }
 
         function loadMessages() {
@@ -1494,11 +1495,15 @@
 
         function displayMessages(messages) {
             const chatMessages = document.getElementById('chatMessages');
+            if (!chatMessages) return;
+            
             const loadMoreBtn = document.getElementById('loadMoreBtn');
             
             chatMessages.innerHTML = '';
-            chatMessages.appendChild(loadMoreBtn);
-            loadMoreBtn.style.display = 'none';
+            if (loadMoreBtn) {
+                chatMessages.appendChild(loadMoreBtn);
+                loadMoreBtn.style.display = 'none';
+            }
             
             messages.reverse().forEach(msg => {
                 const msgEl = createMessageElement(msg);
@@ -1543,6 +1548,8 @@
 
         function sendMessage() {
             const input = document.getElementById('messageInput');
+            if (!input) return;
+            
             const message = input.value.trim();
             
             if (!message) return;
@@ -1572,7 +1579,9 @@
             input.value = '';
             
             const chatMessages = document.getElementById('chatMessages');
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            if (chatMessages) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
         }
 
         async function handleImageSelect(event) {
@@ -1588,8 +1597,10 @@
             statusEl.style.display = 'block';
             statusEl.textContent = 'Compressing image...';
 
-            document.getElementById('imageBtn').disabled = true;
-            document.getElementById('sendBtn').disabled = true;
+            const imageBtn = document.getElementById('imageBtn');
+            const sendBtn = document.getElementById('sendBtn');
+            if (imageBtn) imageBtn.disabled = true;
+            if (sendBtn) sendBtn.disabled = true;
 
             try {
                 const compressedFile = await compressImage(file, 2 * 1024 * 1024);
@@ -1613,9 +1624,11 @@
                 }, 2000);
                 
                 const chatMessages = document.getElementById('chatMessages');
-                setTimeout(() => {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }, 100);
+                if (chatMessages) {
+                    setTimeout(() => {
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }, 100);
+                }
                 
             } catch (error) {
                 console.error('Error uploading image:', error);
@@ -1625,8 +1638,8 @@
                 }, 3000);
             }
 
-            document.getElementById('imageBtn').disabled = false;
-            document.getElementById('sendBtn').disabled = false;
+            if (imageBtn) imageBtn.disabled = false;
+            if (sendBtn) sendBtn.disabled = false;
 
             event.target.value = '';
         }
@@ -1716,17 +1729,24 @@
             }
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
+        // ==========================================
+        // PAGE INITIALIZATION
+        // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
             const nicknameInput = document.getElementById('nicknameInput');
             if (nicknameInput) {
                 nicknameInput.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') setNickname();
+                });
+            }
+            
+            // Add click handler for chat widget on mobile
+            const chatWidget = document.getElementById('chatWidget');
+            if (chatWidget) {
+                chatWidget.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 900) {
+                        openBottomSheetMobile();
+                    }
                 });
             }
         });
@@ -1740,5 +1760,3 @@
     </script>
 </body>
 </html>
-
-
