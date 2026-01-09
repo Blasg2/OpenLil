@@ -800,28 +800,28 @@
             <!-- CHAT WIDGET -->
             <div id="chatWidget">
                 <div id="chatHeader" onclick="toggleChat()">
-                    <span>💬 Live Chat</span>
+                    <span>💬Chat</span>
                     <span id="chatToggle">−</span>
                 </div>
                 <div id="chatBody">
                     <!-- Nickname Setup View -->
                     <div id="nicknameSetup">
-                        <h3>Choose Your Nickname</h3>
-                        <input type="text" id="nicknameInput" placeholder="Enter nickname..." maxlength="20" />
-                        <button onclick="setNickname()">Join Chat</button>
+                        <h3>Escolha seu Nick</h3>
+                        <input type="text" id="nicknameInput" placeholder="Digite aqui..." maxlength="20" />
+                        <button onclick="setNickname()">Entrar</button>
                     </div>
                     
                     <!-- Chat Interface -->
                     <div id="chatInterface" style="display: none; flex-direction: column; height: 100%;">
                         <div id="chatMessages">
-                            <button id="loadMoreBtn" onclick="loadMoreMessages()" style="display: none;">Load More Messages</button>
+                            <button id="loadMoreBtn" onclick="loadMoreMessages()" style="display: none;">Carregar mais mensagens</button>
                         </div>
                         <div class="upload-status" id="uploadStatus" style="display: none;"></div>
                         <div id="chatInput">
                             <input type="file" id="imageFileInput" accept="image/*" capture="environment" onchange="handleImageSelect(event)" />
                             <button id="imageBtn" onclick="document.getElementById('imageFileInput').click()">📷</button>
-                            <input type="text" id="messageInput" placeholder="Type a message..." maxlength="500" />
-                            <button id="sendBtn" onclick="sendMessage()">Send</button>
+                            <input type="text" id="messageInput" placeholder="Digite uma mensagem..." maxlength="500" />
+                            <button id="sendBtn" onclick="sendMessage()">Enviar</button>
                         </div>
                     </div>
                 </div>
@@ -841,13 +841,13 @@
                     <!-- Days -->
                     <div class="time-box">
                         <span class="time-number" id="days">7</span>
-                        <span class="time-label">Days</span>
+                        <span class="time-label">Dias</span>
                     </div>
                     
                     <!-- Hours -->
                     <div class="time-box">
                         <span class="time-number" id="hours">00</span>
-                        <span class="time-label">Hours</span>
+                        <span class="time-label">Horas</span>
                     </div>
                     
                     <!-- Character -->
@@ -858,13 +858,13 @@
                     <!-- Minutes -->
                     <div class="time-box">
                         <span class="time-number" id="minutes">00</span>
-                        <span class="time-label">Minutes</span>
+                        <span class="time-label">Minutos</span>
                     </div>
                     
                     <!-- Seconds -->
                     <div class="time-box">
                         <span class="time-number" id="seconds">00</span>
-                        <span class="time-label">Seconds</span>
+                        <span class="time-label">Segundos</span>
                     </div>
                 </div>
             </div>
@@ -1186,7 +1186,7 @@
             const nickname = input.value.trim();
             
             if (nickname.length < 2) {
-                alert('Nickname must be at least 2 characters!');
+                alert('Pelo menos 2 caracteres!');
                 return;
             }
             
@@ -1777,5 +1777,6 @@
     </script>
 </body>
 </html>
+
 
 
