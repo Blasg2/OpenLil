@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Page</title>
     <style>
         * {
@@ -305,6 +305,11 @@
             right: calc(100% + 50px);
         }
 
+        /* Mobile decoration container */
+        .mobile-decorations {
+            display: none;
+        }
+
         /* CHAT STYLES */
         #chatWidget {
             width: 100%;
@@ -411,7 +416,7 @@
             border: 1px solid #ddd;
             border-radius: 20px;
             outline: none;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         #imageBtn {
@@ -524,10 +529,11 @@
         @media (max-width: 900px) {
             body {
                 padding: 10px;
+                align-items: flex-start;
             }
             
             .wrapper {
-                padding-bottom: 180px; /* Make space for decoration images at bottom */
+                margin-top: 20px;
             }
             
             .container {
@@ -548,6 +554,10 @@
             #chatWidget {
                 margin: 10px 0;
                 max-width: 100%;
+            }
+            
+            #chatBody {
+                height: 500px; /* Bigger on mobile */
             }
             
             #chatMessages {
@@ -591,28 +601,32 @@
                 max-width: 100%;
             }
             
-            /* DECORATION IMAGES AT BOTTOM - SIDE BY SIDE */
+            /* HIDE DESKTOP DECORATIONS ON MOBILE */
             .decoration-link {
-                position: fixed;
-                bottom: 20px;
-                left: auto;
-                right: auto;
-                top: auto;
-                z-index: 1000;
+                display: none;
             }
             
-            .decoration-left {
-                left: calc(50% - 90px); /* Left of center */
+            /* SHOW MOBILE DECORATIONS BELOW TIMER */
+            .mobile-decorations {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin: 30px 0;
             }
             
-            .decoration-left-below {
-                left: calc(50% + 10px); /* Right of center */
-                top: auto;
-                bottom: 20px;
+            .mobile-decorations a {
+                display: block;
             }
             
-            .decoration-image {
-                width: 80px; /* Smaller on mobile */
+            .mobile-decorations img {
+                width: 300px;
+                height: auto;
+                cursor: pointer;
+                transition: transform 0.2s ease;
+            }
+            
+            .mobile-decorations img:hover {
+                transform: scale(1.05);
             }
         }
 
@@ -635,28 +649,25 @@
                 padding: 10px;
             }
             
-            .decoration-image {
-                width: 70px; /* Even smaller on tiny phones */
+            .mobile-decorations {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
             }
             
-            .decoration-left {
-                left: calc(50% - 75px);
-            }
-            
-            .decoration-left-below {
-                left: calc(50% + 5px);
+            .mobile-decorations img {
+                width: 250px;
             }
         }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <!-- Decoration image with link -->
+        <!-- Desktop decoration images (hidden on mobile) -->
         <a href="https://www.instagram.com/draisatorres/" target="_blank" class="decoration-link decoration-left">
             <img src="images/Isanja.png" class="decoration-image" alt="decoration">
         </a>
         
-        <!-- Second decoration image below with link -->
         <a href="https://www.instagram.com/lamanchagames/" target="_blank" class="decoration-link decoration-left-below">
             <img src="images/LilAd.png" class="decoration-image" alt="advertisement">
         </a>
@@ -734,6 +745,16 @@
                         <span class="time-label">Seconds</span>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Mobile decoration images (shown only on mobile, below timer) -->
+            <div class="mobile-decorations">
+                <a href="https://www.instagram.com/draisatorres/" target="_blank">
+                    <img src="images/Isanja.png" alt="decoration">
+                </a>
+                <a href="https://www.instagram.com/lamanchagames/" target="_blank">
+                    <img src="images/LilAd.png" alt="advertisement">
+                </a>
             </div>
         </div>
     </div>
@@ -998,10 +1019,8 @@
                 const scrollHeight = chatMessages.scrollHeight;
                 const clientHeight = chatMessages.clientHeight;
                 
-                // Distance from top in reversed container
                 const distanceFromTop = scrollHeight + scrollTop - clientHeight;
                 
-                // Show button only when scrolled UP close to top
                 const loadMoreBtn = document.getElementById('loadMoreBtn');
                 if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
                     loadMoreBtn.style.display = 'block';
