@@ -710,6 +710,46 @@
                 display: none !important;
             }
         }
+        /* MAKE BOTTOM SHEET TEXT BIGGER */
+#bottomSheetMessages .chat-nickname {
+    font-size: 14px !important;
+    font-weight: bold;
+}
+
+#bottomSheetMessages .chat-text {
+    font-size: 16px !important;
+    padding: 12px 16px !important;
+}
+
+#bottomSheetMessages .chat-timestamp {
+    font-size: 12px !important;
+}
+
+#bottomSheetMessages .chat-message {
+    margin-bottom: 15px !important;
+}
+
+#bottomSheetMessageInput {
+    font-size: 18px !important;
+    padding: 16px !important;
+}
+
+#bottomSheetBody button {
+    font-size: 18px !important;
+    padding: 16px 28px !important;
+}
+
+#bottomSheetHeader {
+    font-size: 18px !important;
+    padding: 18px 20px !important;
+}
+
+/* Camera button bigger */
+#bottomSheetBody input[type="file"] + button {
+    width: 55px !important;
+    height: 55px !important;
+    font-size: 24px !important;
+}
     </style>
 </head>
 <body>
@@ -1100,15 +1140,26 @@
                 </div>
             `;
             
-            loadMessagesBottomSheet();
+        function loadMessagesBottomSheet() {
+            // Remove any existing listener first
+            messagesRef.off();
             
-            setTimeout(() => {
-                const input = document.getElementById('bottomSheetMessageInput');
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') sendMessageBottomSheet();
+            // Set up real-time listener
+            messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
+                const messages = [];
+                snapshot.forEach((child) => {
+                    messages.push({ id: child.key, ...child.val() });
                 });
-                input.focus();
-            }, 100);
+                
+                if (messages.length > 0) {
+                    oldestLoadedTimestamp = messages[0].timestamp;
+                }
+                
+                displayMessagesBottomSheet(messages);
+                
+                // Also update regular chat if it exists
+                displayMessages(messages);
+            });
         }
 
         async function setNicknameBottomSheet() {
@@ -1684,3 +1735,4 @@
     </script>
 </body>
 </html>
+
