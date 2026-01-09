@@ -1058,7 +1058,10 @@
         let isDragging = false;
 
         function openBottomSheetMobile() {
-            if (!isMobile()) return;
+            // On desktop, just return and do nothing
+            if (!isMobile()) {
+                return;
+            }
             
             const overlay = document.getElementById('bottomSheetOverlay');
             const sheet = document.getElementById('bottomSheet');
@@ -1075,10 +1078,12 @@
                 
                 setTimeout(() => {
                     const input = document.getElementById('bottomSheetNicknameInput');
-                    input.focus();
-                    input.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') setNicknameBottomSheet();
-                    });
+                    if (input) {
+                        input.focus();
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') setNicknameBottomSheet();
+                        });
+                    }
                 }, 100);
             } else {
                 showBottomSheetChat();
@@ -1735,4 +1740,5 @@
     </script>
 </body>
 </html>
+
 
