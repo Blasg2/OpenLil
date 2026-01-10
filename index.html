@@ -1334,73 +1334,62 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
             lastMouseY = e.clientY;
         });
         
-        setInterval(function() {
-            // Don't move button if minigame is won
-            if (buttonFixed) return;
+setInterval(function() {
+    // Don't move button if minigame is won
+    if (buttonFixed) return;
 
-            const btnRect = btn.getBoundingClientRect();
+    const btnRect = btn.getBoundingClientRect();
+    
+    const isInside = lastMouseX >= btnRect.left && lastMouseX <= btnRect.right &&
+                     lastMouseY >= btnRect.top && lastMouseY <= btnRect.bottom;
+    
+    if (isInside) {
+        const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
+        offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
+        offsetY = (Math.random() - 0.5) * 80;
+        offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+        offsetY = Math.max(-40, Math.min(40, offsetY));
+        btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+    } else {
+        const btnCenterX = btnRect.left + btnRect.width / 2;
+        const btnCenterY = btnRect.top + btnRect.height / 2;
+        
+        const distanceX = lastMouseX - btnCenterX;
+        const distanceY = lastMouseY - btnCenterY;
+        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+        
+        if (distance < 80) {
+            const angle = Math.atan2(distanceY, distanceX);
+            const moveDistance = 200;
+            const randomAngleOffset = (Math.random() - 0.5) * 0.5;
+            const adjustedAngle = angle + randomAngleOffset;
             
-            const isInside = lastMouseX >= btnRect.left && lastMouseX <= btnRect.right &&
-                             lastMouseY >= btnRect.top && lastMouseY <= btnRect.bottom;
+            offsetX -= Math.cos(adjustedAngle) * moveDistance;
+            offsetY -= Math.sin(adjustedAngle) * moveDistance;
             
-            if (isInside) {
-                offsetX = (Math.random() - 0.5) * 800;
-                offsetY = (Math.random() - 0.5) * 120;
-                btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-            } else {
-                const btnCenterX = btnRect.left + btnRect.width / 2;
-                const btnCenterY = btnRect.top + btnRect.height / 2;
-                
-                const distanceX = lastMouseX - btnCenterX;
-                const distanceY = lastMouseY - btnCenterY;
-                const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-                
-                if (distance < 80) {
-                    const angle = Math.atan2(distanceY, distanceX);
-                    const moveDistance = 200;
-                    const randomAngleOffset = (Math.random() - 0.5) * 0.5;
-                    const adjustedAngle = angle + randomAngleOffset;
-                    
-                    offsetX -= Math.cos(adjustedAngle) * moveDistance;
-                    offsetY -= Math.sin(adjustedAngle) * moveDistance;
-                    
-                    // Calculate safe movement range based on screen width
-                    const screenWidth = window.innerWidth;
-                    const maxMoveX = Math.min(200, (screenWidth - 250) / 2); // Safe horizontal range
-                    const maxMoveY = 40; // Reduced vertical range
-                    
-                    offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
-                    offsetY = (Math.random() - 0.5) * (maxMoveY * 2);
-                    
-                    // Clamp values
-                    offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
-                    offsetY = Math.max(-maxMoveY, Math.min(maxMoveY, offsetY));
-                    
-                    btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-                }
-            }
-        }, 50);
+            const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
+            offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+            offsetY = Math.max(-40, Math.min(40, offsetY));
+            
+            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+        }
+    }
+}, 50);
         
         btn.addEventListener('mouseenter', teleportButton);
         btn.addEventListener('mouseover', teleportButton);
         
-        function teleportButton() {
-            // Don't move button if minigame is won
-            if (buttonFixed) return;
+ function teleportButton() {
+    // Don't move button if minigame is won
+    if (buttonFixed) return;
 
-// Calculate safe movement range based on screen width
-const screenWidth = window.innerWidth;
-const maxMoveX = Math.min(200, (screenWidth - 250) / 2); // Safe horizontal range
-const maxMoveY = 40; // Reduced vertical range
-
-offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
-offsetY = (Math.random() - 0.5) * (maxMoveY * 2);
-
-// Clamp values
-offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
-offsetY = Math.max(-maxMoveY, Math.min(maxMoveY, offsetY));
-            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-        }
+    const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
+    offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
+    offsetY = (Math.random() - 0.5) * 80;
+    offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+    offsetY = Math.max(-40, Math.min(40, offsetY));
+    btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+}
 
         // ==========================================
         // FIREBASE CHAT
@@ -2194,6 +2183,7 @@ offsetY = Math.max(-maxMoveY, Math.min(maxMoveY, offsetY));
     </script>
 </body>
 </html>
+
 
 
 
