@@ -163,6 +163,7 @@
             position: relative;
             height: 120px;
             margin: 30px 0;
+            overflow: hidden;
         }
         
         #downloadBtn {
@@ -919,6 +920,65 @@
                 max-width: 250px;
             }
         }
+
+        /* Ultra narrow screens (Galaxy Fold cover screen, etc) */
+@media (max-width: 380px) {
+    .timer-wrapper {
+        padding: 20px 10px;
+    }
+    
+    .timer-grid {
+        gap: 4px;
+    }
+    
+    .time-box {
+        padding: 12px 6px;
+    }
+    
+    .time-number {
+        font-size: 28px !important;
+    }
+    
+    .time-label {
+        font-size: 9px;
+        letter-spacing: 1px;
+    }
+    
+    .character-img {
+        width: 100px !important;
+    }
+    
+    #downloadBtn {
+        padding: 12px 25px !important;
+        font-size: 14px !important;
+    }
+    
+    .button-area {
+        padding: 0 10px;
+        overflow: hidden;
+    }
+    
+    #modalSendBtn {
+        padding: 15px 18px !important;
+        font-size: 15px !important;
+    }
+    
+    #modalMessageInput {
+        padding: 15px !important;
+        font-size: 16px !important;
+    }
+    
+    #modalImageBtn {
+        width: 48px !important;
+        height: 48px !important;
+        font-size: 20px !important;
+    }
+    
+    #modalChatInput {
+        gap: 6px !important;
+        padding: 12px !important;
+    }
+}
 
         /* Desktop - no mobile chat */
         @media (min-width: 901px) {
@@ -2102,5 +2162,6 @@
     </script>
 </body>
 </html>
+
 
 
