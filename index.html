@@ -1081,9 +1081,6 @@
     </style>
 </head>
 <body>
-    <!-- DEBUG WIDTH DISPLAY -->
-    <div id="debugWidth">Width: <span id="screenDebug">0</span>px</div>
-
     <!-- IMAGE LIGHTBOX -->
     <div id="imageLightbox" onclick="closeLightbox()">
         <button id="closeLightbox">×</button>
@@ -1215,12 +1212,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
-        // Update debug width display
-        function updateDebugWidth() {
-            document.getElementById('screenDebug').textContent = window.innerWidth;
-        }
-        updateDebugWidth();
-        window.addEventListener('resize', updateDebugWidth);
+
 
         // ==========================================
         // MINIGAME SYSTEM
@@ -2296,6 +2288,7 @@
     </script>
 </body>
 </html>
+
 
 
 
