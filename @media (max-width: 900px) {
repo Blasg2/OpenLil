@@ -1157,7 +1157,7 @@
             <img src="images/cover11.png" alt="capa" class="cover-image" onclick="openLightbox('images/cover11.png')">
             
             <!-- MINIGAME BUTTON -->
-            <button id="minigameBtn" onclick="startMinigame()">Minigame para fixar o botão de Download</button>
+            <button id="minigameBtn" onclick="startMinigame()">Minigame para cucu o botão de Download</button>
             <div id="minigameStatus"></div>
             
             <div class="button-area">
@@ -2296,3 +2296,4 @@
     </script>
 </body>
 </html>
+
