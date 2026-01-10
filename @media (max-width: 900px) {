@@ -59,6 +59,12 @@
             border-radius: 10px;
             margin: 20px auto;
             display: block;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .cover-image:hover {
+            transform: scale(1.02);
         }
         
         p {
@@ -376,55 +382,53 @@
         }
 
         /* Decoration images */
-   .decoration-link {
-    position: absolute;
-    z-index: 1;
-}
+        .decoration-link {
+            position: absolute;
+            z-index: 1;
+        }
 
-.decoration-image {
-    width: 300px;
-    display: block;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
+        .decoration-image {
+            width: 300px;
+            display: block;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
 
-.decoration-image:hover {
-    transform: scale(1.05);
-}
+        .decoration-image:hover {
+            transform: scale(1.05);
+        }
 
-.decoration-left {
-    top: 20px;
-    left: calc(100% + 20px); /* Reduced gap from 50px to 20px */
-}
+        .decoration-left {
+            top: 20px;
+            left: calc(100% + 15px);
+        }
 
-.decoration-left-below {
-    top: 650px;
-    left: calc(100% + 20px); /* Reduced gap */
-}
+        .decoration-left-below {
+            top: 650px;
+            left: calc(100% + 15px);
+        }
 
-.decoration-right {
-    bottom: 20px;
-    right: calc(100% + 20px); /* Reduced gap */
-}
+        .decoration-right {
+            bottom: 20px;
+            right: calc(100% + 15px);
+        }
 
-/* Scale down on narrower desktops */
-@media (max-width: 1600px) and (min-width: 901px) {
-    .decoration-image {
-        width: 220px; /* Smaller decorations */
-    }
-    
-    .decoration-left {
-        left: calc(100% + 10px); /* Even smaller gap */
-    }
-    
-    .decoration-left-below {
-        left: calc(100% + 10px);
-    }
-    
-    .decoration-right {
-        right: calc(100% + 10px);
-    }
-}
+        /* Scale down decorations on narrower screens */
+        @media (max-width: 1500px) and (min-width: 901px) {
+            .decoration-image {
+                width: 180px;
+            }
+            
+            .decoration-left,
+            .decoration-left-below {
+                left: calc(100% + 5px);
+            }
+            
+            .decoration-right {
+                right: calc(100% + 5px);
+            }
+        }
+
         /* Mobile decoration container */
         .mobile-decorations {
             display: none;
@@ -898,6 +902,21 @@
         #closeLightbox:hover {
             background: #cc0000;
         }
+
+        /* DEBUG WIDTH */
+        #debugWidth {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: red;
+            color: white;
+            padding: 10px 15px;
+            z-index: 99999;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            font-family: monospace;
+        }
         
         /* Responsive adjustments */
         @media (max-width: 900px) {
@@ -1062,12 +1081,9 @@
     </style>
 </head>
 <body>
-<div style="position: fixed; top: 10px; left: 10px; background: red; color: white; padding: 10px; z-index: 99999;">
-    Screen: <span id="screenDebug"></span>px
-</div>
-<script>
-    document.getElementById('screenDebug').textContent = window.innerWidth;
-</script>
+    <!-- DEBUG WIDTH DISPLAY -->
+    <div id="debugWidth">Width: <span id="screenDebug">0</span>px</div>
+
     <!-- IMAGE LIGHTBOX -->
     <div id="imageLightbox" onclick="closeLightbox()">
         <button id="closeLightbox">×</button>
@@ -1097,8 +1113,8 @@
         </a>
         
         <div class="container">
-         <h1>🚀</h1>
-        <h2 style="display: none;">Lil's Life Launch</h2>
+            <h1>🚀</h1>
+            <h2 style="display: none;">Lil's Life Launch</h2>
             
             <!-- MOBILE CHAT PREVIEW -->
             <div id="chatPreview">
@@ -1138,7 +1154,7 @@
                 </div>
             </div>
             
-            <img src="images/cover11.png" alt="capa" class="cover-image">
+            <img src="images/cover11.png" alt="capa" class="cover-image" onclick="openLightbox('images/cover11.png')">
             
             <!-- MINIGAME BUTTON -->
             <button id="minigameBtn" onclick="startMinigame()">Minigame para fixar o botão de Download</button>
@@ -1199,6 +1215,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
+        // Update debug width display
+        function updateDebugWidth() {
+            document.getElementById('screenDebug').textContent = window.innerWidth;
+        }
+        updateDebugWidth();
+        window.addEventListener('resize', updateDebugWidth);
+
         // ==========================================
         // MINIGAME SYSTEM
         // ==========================================
@@ -2273,7 +2296,3 @@
     </script>
 </body>
 </html>
-
-
-
-
