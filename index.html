@@ -398,36 +398,40 @@
             transform: scale(1.05);
         }
 
-        .decoration-left {
-            top: 20px;
-            left: calc(100% + 15px);
-        }
+.decoration-left {
+    top: 20px;
+    left: calc(100% + 15px);
+}
 
-        .decoration-left-below {
-            top: 650px;
-            left: calc(100% + 15px);
-        }
+.decoration-left-below {
+    top: 350px; /* Default for 300px images */
+    left: calc(100% + 15px);
+}
 
-        .decoration-right {
-            bottom: 20px;
-            right: calc(100% + 15px);
-        }
+.decoration-right {
+    bottom: 20px;
+    right: calc(100% + 15px);
+}
 
-        /* Scale down decorations on narrower screens */
-             @media (max-width: 1650px) and (min-width: 901px) {
-            .decoration-image {
-                width: 180px;
-            }
-            
-            .decoration-left,
-            .decoration-left-below {
-                left: calc(100% + 5px);
-            }
-            
-            .decoration-right {
-                right: calc(100% + 5px);
-            }
-        }
+/* Scale down decorations on narrower screens */
+@media (max-width: 1650px) and (min-width: 901px) {
+    .decoration-image {
+        width: 180px; /* Smaller decorations */
+    }
+    
+    .decoration-left {
+        left: calc(100% + 5px);
+    }
+    
+    .decoration-left-below {
+        top: 220px; /* Closer together for smaller decorations */
+        left: calc(100% + 5px);
+    }
+    
+    .decoration-right {
+        right: calc(100% + 5px);
+    }
+}
 
         /* Mobile decoration container */
         .mobile-decorations {
@@ -2296,6 +2300,7 @@
     </script>
 </body>
 </html>
+
 
 
 
