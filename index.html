@@ -1364,8 +1364,9 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
                     offsetX -= Math.cos(adjustedAngle) * moveDistance;
                     offsetY -= Math.sin(adjustedAngle) * moveDistance;
                     
-                    offsetX = Math.max(-400, Math.min(400, offsetX));
-                    offsetY = Math.max(-60, Math.min(60, offsetY));
+                    const maxX = Math.min(150, (window.innerWidth - 200) / 2);
+                    offsetX = Math.max(-maxX, Math.min(maxX, offsetX));
+                    offsetY = Math.max(-40, Math.min(40, offsetY));
                     
                     btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
                 }
@@ -2176,6 +2177,7 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
     </script>
 </body>
 </html>
+
 
 
 
