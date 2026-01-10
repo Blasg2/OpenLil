@@ -906,7 +906,6 @@
                     <!-- Chat Interface -->
                     <div id="chatInterface" style="display: none; flex-direction: column; height: 100%;">
                         <div id="chatMessages">
-                            <button id="loadMoreBtn" onclick="loadMoreMessages()" style="display: none;">Carregar mais mensagens</button>
                         </div>
                         <div class="upload-status" id="uploadStatus" style="display: none;"></div>
                         <div id="chatInput">
@@ -1644,23 +1643,21 @@ function createFireworks() {
                 });
             }
             
-            const chatMessages = document.getElementById('chatMessages');
-            if (chatMessages) {
-                chatMessages.addEventListener('scroll', () => {
-                    const scrollTop = chatMessages.scrollTop;
-                    const scrollHeight = chatMessages.scrollHeight;
-                    const clientHeight = chatMessages.clientHeight;
-                    
-                    const distanceFromTop = scrollHeight + scrollTop - clientHeight;
-                    
-                    const loadMoreBtn = document.getElementById('loadMoreBtn');
-                    if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
-                        loadMoreBtn.style.display = 'block';
-                    } else {
-                        loadMoreBtn.style.display = 'none';
-                    }
-                });
-            }
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.addEventListener('scroll', () => {
+                const scrollTop = chatMessages.scrollTop;
+                const scrollHeight = chatMessages.scrollHeight;
+                const clientHeight = chatMessages.clientHeight;
+                
+                const distanceFromTop = scrollHeight + scrollTop - clientHeight;
+                
+                // Auto-load when scrolling to top
+                if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
+                    loadMoreMessages();
+                }
+            });
+        }
         }
 
         function loadMessages() {
@@ -2064,6 +2061,7 @@ async function compressImage(file, maxSizeBytes) {
     </script>
 </body>
 </html>
+
 
 
 
