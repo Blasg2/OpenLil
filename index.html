@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Page</title>
     <style>
         * {
@@ -21,6 +21,7 @@
             padding: 20px;
             position: relative;
             overflow-x: hidden;
+            width: 100%;
         }
 
         body.modal-open {
@@ -41,6 +42,7 @@
             width: 100%;
             position: relative;
             z-index: 1;
+            overflow: hidden;
         }
         
         h1 {
@@ -195,6 +197,8 @@
                 inset 0 0 50px rgba(147, 51, 234, 0.1);
             position: relative;
             overflow: hidden;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         /* Animated background */
@@ -838,10 +842,12 @@
             
             .wrapper {
                 margin-top: 20px;
+                width: 100%;
+                max-width: 100%;
             }
             
             .container {
-                padding: 20px;
+                padding: 15px;
             }
             
             .timer-grid {
@@ -879,6 +885,7 @@
                 justify-content: center;
                 gap: 20px;
                 margin: 30px 0;
+                flex-wrap: wrap;
             }
             
             .mobile-decorations a {
@@ -886,7 +893,8 @@
             }
             
             .mobile-decorations img {
-                width: 300px;
+                width: 100%;
+                max-width: 300px;
                 height: auto;
                 cursor: pointer;
                 transition: transform 0.2s ease;
@@ -906,7 +914,8 @@
             }
             
             .mobile-decorations img {
-                width: 250px;
+                width: 100%;
+                max-width: 250px;
             }
         }
 
@@ -2092,7 +2101,3 @@
     </script>
 </body>
 </html>
-
-
-
-
