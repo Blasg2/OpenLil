@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>My Page</title>
     <style>
         * {
@@ -835,6 +835,52 @@
             padding: 18px 30px;
             font-weight: bold;
         }
+
+        /* IMAGE LIGHTBOX */
+        #imageLightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #imageLightbox.active {
+            display: flex;
+        }
+
+        #imageLightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        }
+
+        #closeLightbox {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(255, 68, 68, 0.4);
+        }
+
+        #closeLightbox:hover {
+            background: #cc0000;
+        }
         
         /* Responsive adjustments */
         @media (max-width: 900px) {
@@ -921,72 +967,71 @@
             }
         }
 
-        /* Ultra narrow screens (Galaxy Fold cover screen, etc) */
-/* Narrow phones like Galaxy Fold cover screen */
-@media (max-width: 420px) {
-    .container {
-        padding: 10px !important;
-    }
-    
-    .timer-wrapper {
-        padding: 20px 10px !important;
-    }
-    
-    .timer-grid {
-        gap: 4px !important;
-    }
-    
-    .time-box {
-        padding: 10px 4px !important;
-    }
-    
-    .time-number {
-        font-size: 24px !important;
-    }
-    
-    .time-label {
-        font-size: 8px !important;
-        letter-spacing: 1px;
-    }
-    
-    .character-img {
-        width: 90px !important;
-    }
-    
-    .button-area {
-        margin: 20px 0;
-        padding: 0;
-        overflow: hidden !important;
-    }
-    
-    #downloadBtn {
-        padding: 10px 20px !important;
-        font-size: 14px !important;
-        max-width: 90%;
-    }
-    
-    #modalSendBtn {
-        padding: 15px 15px !important;
-        font-size: 14px !important;
-        min-width: auto !important;
-    }
-    
-    #modalMessageInput {
-        font-size: 16px !important;
-        padding: 12px !important;
-    }
-    
-    #modalImageBtn {
-        width: 45px !important;
-        height: 45px !important;
-        font-size: 20px !important;
-    }
-    
-    #modalChatInput {
-        padding: 10px !important;
-        gap: 6px !important;
-    }
-}
+        /* Narrow phones like Galaxy Fold cover screen */
+        @media (max-width: 420px) {
+            .container {
+                padding: 10px !important;
+            }
+            
+            .timer-wrapper {
+                padding: 20px 10px !important;
+            }
+            
+            .timer-grid {
+                gap: 4px !important;
+            }
+            
+            .time-box {
+                padding: 10px 4px !important;
+            }
+            
+            .time-number {
+                font-size: 24px !important;
+            }
+            
+            .time-label {
+                font-size: 8px !important;
+                letter-spacing: 1px;
+            }
+            
+            .character-img {
+                width: 90px !important;
+            }
+            
+            .button-area {
+                margin: 20px 0;
+                padding: 0;
+                overflow: visible !important;
+            }
+            
+            #downloadBtn {
+                padding: 10px 20px !important;
+                font-size: 14px !important;
+                max-width: 90%;
+            }
+            
+            #modalSendBtn {
+                padding: 15px 15px !important;
+                font-size: 14px !important;
+                min-width: auto !important;
+            }
+            
+            #modalMessageInput {
+                font-size: 16px !important;
+                padding: 12px !important;
+            }
+            
+            #modalImageBtn {
+                width: 45px !important;
+                height: 45px !important;
+                font-size: 20px !important;
+            }
+            
+            #modalChatInput {
+                padding: 10px !important;
+                gap: 6px !important;
+            }
+        }
 
         /* Desktop - no mobile chat */
         @media (min-width: 901px) {
@@ -999,12 +1044,12 @@
     </style>
 </head>
 <body>
-    <!-- Add this right after opening <body> tag -->
-<div id="debugWidth" style="position: fixed; top: 0; left: 0; background: red; color: white; padding: 10px; z-index: 99999; font-size: 20px;"></div>
+    <!-- IMAGE LIGHTBOX -->
+    <div id="imageLightbox" onclick="closeLightbox()">
+        <button id="closeLightbox">×</button>
+        <img id="lightboxImage" src="" alt="Full size image" onclick="event.stopPropagation()">
+    </div>
 
-<script>
-document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidth + 'px';
-</script>
     <!-- MOBILE CHAT MODAL -->
     <div id="chatModalOverlay" onclick="closeChatModal()"></div>
     <div id="chatModal">
@@ -1334,62 +1379,62 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
             lastMouseY = e.clientY;
         });
         
-setInterval(function() {
-    // Don't move button if minigame is won
-    if (buttonFixed) return;
+        setInterval(function() {
+            // Don't move button if minigame is won
+            if (buttonFixed) return;
 
-    const btnRect = btn.getBoundingClientRect();
-    
-    const isInside = lastMouseX >= btnRect.left && lastMouseX <= btnRect.right &&
-                     lastMouseY >= btnRect.top && lastMouseY <= btnRect.bottom;
-    
-    if (isInside) {
-        const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
-        offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
-        offsetY = (Math.random() - 0.5) * 80;
-        offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
-        offsetY = Math.max(-40, Math.min(40, offsetY));
-        btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-    } else {
-        const btnCenterX = btnRect.left + btnRect.width / 2;
-        const btnCenterY = btnRect.top + btnRect.height / 2;
-        
-        const distanceX = lastMouseX - btnCenterX;
-        const distanceY = lastMouseY - btnCenterY;
-        const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
-        
-        if (distance < 80) {
-            const angle = Math.atan2(distanceY, distanceX);
-            const moveDistance = 200;
-            const randomAngleOffset = (Math.random() - 0.5) * 0.5;
-            const adjustedAngle = angle + randomAngleOffset;
+            const btnRect = btn.getBoundingClientRect();
             
-            offsetX -= Math.cos(adjustedAngle) * moveDistance;
-            offsetY -= Math.sin(adjustedAngle) * moveDistance;
+            const isInside = lastMouseX >= btnRect.left && lastMouseX <= btnRect.right &&
+                             lastMouseY >= btnRect.top && lastMouseY <= btnRect.bottom;
             
-            const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
-            offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
-            offsetY = Math.max(-40, Math.min(40, offsetY));
-            
-            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-        }
-    }
-}, 50);
+            if (isInside) {
+                const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
+                offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
+                offsetY = (Math.random() - 0.5) * 80;
+                offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+                offsetY = Math.max(-40, Math.min(40, offsetY));
+                btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+            } else {
+                const btnCenterX = btnRect.left + btnRect.width / 2;
+                const btnCenterY = btnRect.top + btnRect.height / 2;
+                
+                const distanceX = lastMouseX - btnCenterX;
+                const distanceY = lastMouseY - btnCenterY;
+                const distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+                
+                if (distance < 80) {
+                    const angle = Math.atan2(distanceY, distanceX);
+                    const moveDistance = 200;
+                    const randomAngleOffset = (Math.random() - 0.5) * 0.5;
+                    const adjustedAngle = angle + randomAngleOffset;
+                    
+                    offsetX -= Math.cos(adjustedAngle) * moveDistance;
+                    offsetY -= Math.sin(adjustedAngle) * moveDistance;
+                    
+                    const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
+                    offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+                    offsetY = Math.max(-40, Math.min(40, offsetY));
+                    
+                    btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+                }
+            }
+        }, 50);
         
         btn.addEventListener('mouseenter', teleportButton);
         btn.addEventListener('mouseover', teleportButton);
         
- function teleportButton() {
-    // Don't move button if minigame is won
-    if (buttonFixed) return;
+        function teleportButton() {
+            // Don't move button if minigame is won
+            if (buttonFixed) return;
 
-    const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
-    offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
-    offsetY = (Math.random() - 0.5) * 80;
-    offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
-    offsetY = Math.max(-40, Math.min(40, offsetY));
-    btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-}
+            const maxMoveX = Math.min(150, (window.innerWidth - 250) / 2);
+            offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
+            offsetY = (Math.random() - 0.5) * 80;
+            offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+            offsetY = Math.max(-40, Math.min(40, offsetY));
+            btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+        }
 
         // ==========================================
         // FIREBASE CHAT
@@ -1482,6 +1527,23 @@ setInterval(function() {
         function truncateText(text, maxLength) {
             if (text.length <= maxLength) return text;
             return text.substring(0, maxLength) + '...';
+        }
+
+        // ==========================================
+        // IMAGE LIGHTBOX FUNCTIONS
+        // ==========================================
+        function openLightbox(imageUrl) {
+            const lightbox = document.getElementById('imageLightbox');
+            const img = document.getElementById('lightboxImage');
+            img.src = imageUrl;
+            lightbox.classList.add('active');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('imageLightbox');
+            lightbox.classList.remove('active');
+            document.body.classList.remove('modal-open');
         }
 
         // ==========================================
@@ -1715,6 +1777,9 @@ setInterval(function() {
             if (modalMessages) {
                 modalMessages.scrollTop = modalMessages.scrollHeight;
             }
+            
+            // Keep keyboard open
+            input.focus();
         }
 
         async function handleModalImageSelect(event) {
@@ -1913,7 +1978,7 @@ setInterval(function() {
             let messageContent = '';
             
             if (msg.imageUrl) {
-                messageContent = `<img src="${escapeHtml(msg.imageUrl)}" class="chat-image" onclick="window.open('${escapeHtml(msg.imageUrl)}', '_blank')" alt="Shared image" onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=\\'color: red;\\'>Image failed to load</div>'">`;
+                messageContent = `<img src="${escapeHtml(msg.imageUrl)}" class="chat-image" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="Shared image" onerror="this.style.display='none'; this.parentElement.innerHTML += '<div style=\\'color: red;\\'>Image failed to load</div>'">`;
             } else if (msg.message) {
                 if (msg.transformedIndices && msg.transformedIndices.length > 0) {
                     const words = msg.message.split(' ');
@@ -2183,10 +2248,3 @@ setInterval(function() {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
