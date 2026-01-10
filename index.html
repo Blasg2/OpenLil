@@ -988,30 +988,43 @@
         let spawnInterval = null;
         let buttonFixed = false;
 
-        function startMinigame() {
-            // Check if mobile
-            if (window.innerWidth <= 900) {
-                document.getElementById('minigameStatus').textContent = 'Não funciona no celular, Lil\'s Life é para PC!';
-                return;
-            }
+    function isWindows() {
+        const platform = navigator.platform.toLowerCase();
+        const userAgent = navigator.userAgent.toLowerCase();
+        
+        return platform.includes('win') || userAgent.includes('windows');
+    }
 
-            // Check if already won
-            if (buttonFixed) {
-                document.getElementById('minigameStatus').textContent = 'Você já venceu! Clique no botão de Download.';
-                return;
-            }
+function startMinigame() {
+    // Check if mobile
+    if (window.innerWidth <= 900) {
+        document.getElementById('minigameStatus').textContent = 'Não funciona no celular, Lil\'s Life é para PC!';
+        return;
+    }
 
-            // Start minigame
-            minigameActive = true;
-            lilsCaptured = 0;
-            document.getElementById('minigameStatus').textContent = 'Capture 5 lils para vencer.';
-            document.getElementById('minigameBtn').disabled = true;
+    // Check if NOT Windows
+    if (!isWindows()) {
+        document.getElementById('minigameStatus').textContent = 'Lil\'s Life é somente para Windows!';
+        return;
+    }
 
-            // Wait 3 seconds then start spawning
-            setTimeout(() => {
-                spawnInterval = setInterval(spawnFallingLil, 800);
-            }, 3000);
-        }
+    // Check if already won
+    if (buttonFixed) {
+        document.getElementById('minigameStatus').textContent = 'Você já venceu! Clique no botão de Download.';
+        return;
+    }
+
+    // Start minigame
+    minigameActive = true;
+    lilsCaptured = 0;
+    document.getElementById('minigameStatus').textContent = 'Capture 5 lils para vencer.';
+    document.getElementById('minigameBtn').disabled = true;
+
+    // Wait 3 seconds then start spawning
+    setTimeout(() => {
+        spawnInterval = setInterval(spawnFallingLil, 800);
+    }, 3000);
+}
 
         function spawnFallingLil() {
             if (!minigameActive) return;
@@ -2008,4 +2021,5 @@ function createFireworks() {
     </script>
 </body>
 </html>
+
 
