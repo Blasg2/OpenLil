@@ -1905,57 +1905,100 @@ function createFireworks() {
             event.target.value = '';
         }
 
-        async function compressImage(file, maxSizeBytes) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        const maxDimension = 1920;
-                        if (width > maxDimension || height > maxDimension) {
-                            if (width > height) {
-                                height = (height / width) * maxDimension;
-                                width = maxDimension;
+async function compressImage(file, maxSizeBytes) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                const maxDimension = 1920;
+                if (width > maxDimension || height > maxDimension) {
+                    if (width > height) {
+                        height = (height / width) * maxDimension;
+                        width = maxDimension;
+                    } else {
+                        width = (width / height) * maxDimension;
+                        height = maxDimension;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // LOAD WATERMARK
+                const watermark = new Image();
+                watermark.onload = () => {
+                    // Watermark size (adjust as needed)
+                    const wmSize = Math.min(width, height) * 0.15; // 15% of image size
+                    const wmWidth = wmSize;
+                    const wmHeight = wmSize;
+                    
+                    // Position bottom-right with 10px padding
+                    const wmX = width - wmWidth - 10;
+                    const wmY = height - wmHeight - 10;
+                    
+                    // Draw watermark with 50% opacity
+                    ctx.globalAlpha = 0.5;
+                    ctx.drawImage(watermark, wmX, wmY, wmWidth, wmHeight);
+                    ctx.globalAlpha = 1.0;
+                    
+                    // Compress and return
+                    let quality = 0.9;
+                    let blob;
+                    
+                    const tryCompress = () => {
+                        canvas.toBlob((b) => {
+                            blob = b;
+                            if (blob.size > maxSizeBytes && quality > 0.1) {
+                                quality -= 0.1;
+                                tryCompress();
                             } else {
-                                width = (width / height) * maxDimension;
-                                height = maxDimension;
+                                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
                             }
-                        }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        let quality = 0.9;
-                        let blob;
-                        
-                        const tryCompress = () => {
-                            canvas.toBlob((b) => {
-                                blob = b;
-                                if (blob.size > maxSizeBytes && quality > 0.1) {
-                                    quality -= 0.1;
-                                    tryCompress();
-                                } else {
-                                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                                }
-                            }, 'image/jpeg', quality);
-                        };
-                        
-                        tryCompress();
+                        }, 'image/jpeg', quality);
                     };
-                    img.onerror = reject;
-                    img.src = e.target.result;
+                    
+                    tryCompress();
                 };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
+                
+                watermark.onerror = () => {
+                    // If watermark fails to load, continue without it
+                    console.warn('Watermark failed to load, continuing without watermark');
+                    let quality = 0.9;
+                    let blob;
+                    
+                    const tryCompress = () => {
+                        canvas.toBlob((b) => {
+                            blob = b;
+                            if (blob.size > maxSizeBytes && quality > 0.1) {
+                                quality -= 0.1;
+                                tryCompress();
+                            } else {
+                                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    
+                    tryCompress();
+                };
+                
+                // Load the watermark image
+                watermark.src = 'images/TimeLilPixel.png';
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
         async function uploadToImgBB(file) {
             const formData = new FormData();
@@ -2021,6 +2064,7 @@ function createFireworks() {
     </script>
 </body>
 </html>
+
 
 
 
