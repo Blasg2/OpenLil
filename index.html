@@ -20,7 +20,6 @@
             align-items: center;
             padding: 20px;
             position: relative;
-            overflow-x: hidden;
             width: 100%;
             -webkit-text-size-adjust: 100%;
             text-size-adjust: 100%;
@@ -60,6 +59,12 @@
             border-radius: 10px;
             margin: 20px auto;
             display: block;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .cover-image:hover {
+            transform: scale(1.02);
         }
         
         p {
@@ -381,31 +386,47 @@
             position: absolute;
             z-index: 1;
         }
-        
+
         .decoration-image {
             width: 300px;
             display: block;
             cursor: pointer;
             transition: transform 0.2s ease;
         }
-        
+
         .decoration-image:hover {
             transform: scale(1.05);
         }
-        
+
         .decoration-left {
             top: 20px;
-            left: calc(100% + 50px);
+            left: calc(100% + 15px);
         }
-        
+
         .decoration-left-below {
             top: 650px;
-            left: calc(100% + 50px);
+            left: calc(100% + 15px);
         }
-        
+
         .decoration-right {
             bottom: 20px;
-            right: calc(100% + 50px);
+            right: calc(100% + 15px);
+        }
+
+        /* Scale down decorations on narrower screens */
+        @media (max-width: 1500px) and (min-width: 901px) {
+            .decoration-image {
+                width: 180px;
+            }
+            
+            .decoration-left,
+            .decoration-left-below {
+                left: calc(100% + 5px);
+            }
+            
+            .decoration-right {
+                right: calc(100% + 5px);
+            }
         }
 
         /* Mobile decoration container */
@@ -881,12 +902,28 @@
         #closeLightbox:hover {
             background: #cc0000;
         }
+
+        /* DEBUG WIDTH */
+        #debugWidth {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: red;
+            color: white;
+            padding: 10px 15px;
+            z-index: 99999;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            font-family: monospace;
+        }
         
         /* Responsive adjustments */
         @media (max-width: 900px) {
             body {
                 padding: 10px;
                 align-items: flex-start;
+                overflow-x: hidden;
             }
             
             .wrapper {
@@ -1044,10 +1081,13 @@
     </style>
 </head>
 <body>
+    <!-- DEBUG WIDTH DISPLAY -->
+    <div id="debugWidth">Width: <span id="screenDebug">0</span>px</div>
+
     <!-- IMAGE LIGHTBOX -->
     <div id="imageLightbox" onclick="closeLightbox()">
         <button id="closeLightbox">×</button>
-        <img id="lightboxImage" src="" alt="Full size image" onclick="event.stopPropagation()">
+        <img id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Full size image" onclick="event.stopPropagation()">
     </div>
 
     <!-- MOBILE CHAT MODAL -->
@@ -1074,6 +1114,7 @@
         
         <div class="container">
             <h1>🚀</h1>
+            <h2 style="display: none;">Lil's Life Launch</h2>
             
             <!-- MOBILE CHAT PREVIEW -->
             <div id="chatPreview">
@@ -1113,7 +1154,7 @@
                 </div>
             </div>
             
-            <img src="images/cover11.png" alt="capa" class="cover-image">
+            <img src="images/cover11.png" alt="capa" class="cover-image" onclick="openLightbox('images/cover11.png')">
             
             <!-- MINIGAME BUTTON -->
             <button id="minigameBtn" onclick="startMinigame()">Minigame para fixar o botão de Download</button>
@@ -1174,6 +1215,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
+        // Update debug width display
+        function updateDebugWidth() {
+            document.getElementById('screenDebug').textContent = window.innerWidth;
+        }
+        updateDebugWidth();
+        window.addEventListener('resize', updateDebugWidth);
+
         // ==========================================
         // MINIGAME SYSTEM
         // ==========================================
@@ -2248,3 +2296,7 @@
     </script>
 </body>
 </html>
+
+
+
+
