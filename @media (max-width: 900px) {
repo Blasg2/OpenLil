@@ -1047,7 +1047,7 @@
     <!-- IMAGE LIGHTBOX -->
     <div id="imageLightbox" onclick="closeLightbox()">
         <button id="closeLightbox">×</button>
-        <img id="lightboxImage" src="" alt="Full size image" onclick="event.stopPropagation()">
+        <img id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Full size image" onclick="event.stopPropagation()">
     </div>
 
     <!-- MOBILE CHAT MODAL -->
@@ -1073,7 +1073,8 @@
         </a>
         
         <div class="container">
-            <h1>🚀</h1>
+         <h1>🚀</h1>
+        <h2 style="display: none;">Lil's Life Launch</h2>
             
             <!-- MOBILE CHAT PREVIEW -->
             <div id="chatPreview">
@@ -2248,4 +2249,5 @@
     </script>
 </body>
 </html>
+
 
