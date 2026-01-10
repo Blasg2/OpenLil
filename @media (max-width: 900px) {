@@ -376,37 +376,55 @@
         }
 
         /* Decoration images */
-        .decoration-link {
-            position: absolute;
-            z-index: 1;
-        }
-        
-        .decoration-image {
-            width: 300px;
-            display: block;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-        
-        .decoration-image:hover {
-            transform: scale(1.05);
-        }
-        
-        .decoration-left {
-            top: 20px;
-            left: calc(100% + 50px);
-        }
-        
-        .decoration-left-below {
-            top: 650px;
-            left: calc(100% + 50px);
-        }
-        
-        .decoration-right {
-            bottom: 20px;
-            right: calc(100% + 50px);
-        }
+   .decoration-link {
+    position: absolute;
+    z-index: 1;
+}
 
+.decoration-image {
+    width: 300px;
+    display: block;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.decoration-image:hover {
+    transform: scale(1.05);
+}
+
+.decoration-left {
+    top: 20px;
+    left: calc(100% + 20px); /* Reduced gap from 50px to 20px */
+}
+
+.decoration-left-below {
+    top: 650px;
+    left: calc(100% + 20px); /* Reduced gap */
+}
+
+.decoration-right {
+    bottom: 20px;
+    right: calc(100% + 20px); /* Reduced gap */
+}
+
+/* Scale down on narrower desktops */
+@media (max-width: 1600px) and (min-width: 901px) {
+    .decoration-image {
+        width: 220px; /* Smaller decorations */
+    }
+    
+    .decoration-left {
+        left: calc(100% + 10px); /* Even smaller gap */
+    }
+    
+    .decoration-left-below {
+        left: calc(100% + 10px);
+    }
+    
+    .decoration-right {
+        right: calc(100% + 10px);
+    }
+}
         /* Mobile decoration container */
         .mobile-decorations {
             display: none;
@@ -2249,5 +2267,6 @@
     </script>
 </body>
 </html>
+
 
 
