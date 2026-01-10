@@ -22,6 +22,10 @@
             position: relative;
             overflow-x: hidden;
         }
+
+        body.modal-open {
+            overflow: hidden;
+        }
         
         .wrapper {
             position: relative;
@@ -137,19 +141,19 @@
             animation: explode 1s ease-out forwards;
         }
 
-@keyframes explode {
-    0% {
-        transform: translate(0, 0) scale(1);
-        opacity: 1;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translate(var(--tx), var(--ty)) scale(0.5);
-        opacity: 0;
-    }
-}
+        @keyframes explode {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0.5);
+                opacity: 0;
+            }
+        }
         
         .button-area {
             position: relative;
@@ -590,22 +594,6 @@
             opacity: 0.9;
         }
 
-        #loadMoreBtn {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 8px;
-            margin: 10px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        #loadMoreBtn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
         #imageFileInput {
             display: none;
         }
@@ -617,72 +605,117 @@
             text-align: center;
         }
 
-        /* BOTTOM SHEET OVERLAY */
-        #bottomSheetOverlay {
+        /* MOBILE CHAT PREVIEW */
+        #chatPreview {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        #chatPreview h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .preview-message {
+            font-size: 13px;
+            color: #666;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preview-message:last-child {
+            border-bottom: none;
+        }
+
+        .preview-nickname {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        #openChatBtn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        /* MOBILE CHAT MODAL */
+        #chatModalOverlay {
             display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 9998;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        #bottomSheetOverlay.active {
+        #chatModalOverlay.active {
             display: block;
             opacity: 1;
         }
 
-        #bottomSheet {
+        #chatModal {
+            display: none;
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 90%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 95%;
+            max-width: 500px;
+            height: 85vh;
             background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             z-index: 9999;
-            border-radius: 20px 20px 0 0;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.3);
-            display: flex;
             flex-direction: column;
-            transform: translateY(100%);
-            transition: transform 0.3s ease-out;
+            opacity: 0;
+            transition: all 0.3s ease;
         }
 
-        #bottomSheet.active {
-            transform: translateY(0);
+        #chatModal.active {
+            display: flex;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
 
-        #bottomSheetHandle {
-            width: 40px;
-            height: 5px;
-            background: #ddd;
-            border-radius: 3px;
-            margin: 12px auto 8px;
-            cursor: grab;
-        }
-
-        #bottomSheetHeader {
+        #chatModalHeader {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 20px;
+            padding: 20px;
             font-weight: bold;
+            font-size: 20px;
+            border-radius: 20px 20px 0 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-radius: 20px 20px 0 0;
         }
 
-        #closeBottomSheetBtn {
-            background: rgba(255,255,255,0.2);
+        #closeChatModalBtn {
+            background: #ff4444;
             border: none;
             color: white;
-            font-size: 28px;
-            width: 35px;
-            height: 35px;
+            font-size: 32px;
+            font-weight: bold;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
@@ -690,13 +723,110 @@
             justify-content: center;
             line-height: 1;
             padding: 0;
+            box-shadow: 0 3px 10px rgba(255, 68, 68, 0.4);
+            transition: all 0.2s ease;
         }
 
-        #bottomSheetBody {
+        #closeChatModalBtn:hover {
+            background: #cc0000;
+            transform: scale(1.1);
+        }
+
+        #chatModalBody {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+        }
+
+        #modalMessages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        #modalMessages .chat-message {
+            margin-bottom: 15px;
+        }
+
+        #modalMessages .chat-nickname {
+            font-size: 16px;
+        }
+
+        #modalMessages .chat-text {
+            font-size: 18px;
+            padding: 12px 16px;
+        }
+
+        #modalMessages .chat-timestamp {
+            font-size: 12px;
+        }
+
+        #modalMessages .chat-image {
+            max-width: 250px;
+        }
+
+        #modalUploadStatus {
+            display: none;
+            font-size: 14px;
+            color: #667eea;
+            padding: 8px 15px;
+            text-align: center;
+        }
+
+        #modalChatInput {
+            display: flex;
+            padding: 15px;
+            border-top: 2px solid #ddd;
+            gap: 10px;
+            background: white;
+            border-radius: 0 0 20px 20px;
+        }
+
+        #modalChatInput input[type="file"] {
+            display: none;
+        }
+
+        #modalChatInput button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            border-radius: 25px;
+            transition: all 0.2s ease;
+        }
+
+        #modalChatInput button:hover {
+            opacity: 0.9;
+        }
+
+        #modalImageBtn {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            font-size: 24px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #modalMessageInput {
+            flex: 1;
+            padding: 18px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 18px;
+        }
+
+        #modalSendBtn {
+            padding: 18px 30px;
+            font-weight: bold;
         }
         
         /* Responsive adjustments */
@@ -724,24 +854,14 @@
                 width: 140px;
             }
             
-            /* CHAT MOBILE - Make clickable to open bottom sheet */
+            /* HIDE DESKTOP CHAT ON MOBILE */
             #chatWidget {
-                margin: 10px 0;
-                max-width: 100%;
-                cursor: pointer;
+                display: none;
             }
 
-            #chatWidget * {
-                pointer-events: none;
-            }
-            
-            #chatBody {
-                height: 250px;
-            }
-            
-            /* SMALLER IMAGES ON MOBILE */
-            .chat-image {
-                max-width: 200px !important;
+            /* SHOW MOBILE CHAT PREVIEW */
+            #chatPreview {
+                display: block;
             }
             
             .cover-image {
@@ -788,90 +908,27 @@
             .mobile-decorations img {
                 width: 250px;
             }
-            
-            /* Even smaller images on tiny phones */
-            .chat-image {
-                max-width: 150px !important;
-            }
         }
 
-        /* Desktop - no bottom sheet needed */
+        /* Desktop - no mobile chat */
         @media (min-width: 901px) {
-            #bottomSheetOverlay,
-            #bottomSheet {
+            #chatPreview,
+            #chatModalOverlay,
+            #chatModal {
                 display: none !important;
             }
-        }
-
-        /* MAKE BOTTOM SHEET TEXT MUCH BIGGER */
-        #bottomSheetMessages {
-            padding: 20px !important;
-        }
-
-        #bottomSheetMessages .chat-message {
-            margin-bottom: 20px !important;
-        }
-
-        #bottomSheetMessages .chat-nickname {
-            font-size: 18px !important;
-            font-weight: bold;
-            margin-bottom: 8px !important;
-        }
-
-        #bottomSheetMessages .chat-text {
-            font-size: 20px !important;
-            padding: 18px 22px !important;
-            line-height: 1.6 !important;
-        }
-
-        #bottomSheetMessages .chat-timestamp {
-            font-size: 14px !important;
-            margin-top: 8px !important;
-        }
-
-        #bottomSheetMessages .chat-image {
-            max-width: 280px !important;
-        }
-
-        #bottomSheetMessageInput {
-            font-size: 18px !important;
-            padding: 18px !important;
-        }
-
-        #bottomSheetBody button {
-            font-size: 18px !important;
-            padding: 18px 30px !important;
-        }
-
-        #bottomSheetHeader {
-            font-size: 20px !important;
-            padding: 20px !important;
-        }
-
-        #closeBottomSheetBtn {
-            font-size: 32px !important;
-            width: 40px !important;
-            height: 40px !important;
-        }
-
-        /* Camera button bigger */
-        #bottomSheetBody input[type="file"] + button {
-            width: 60px !important;
-            height: 60px !important;
-            font-size: 26px !important;
         }
     </style>
 </head>
 <body>
-    <!-- BOTTOM SHEET (Mobile only) -->
-    <div id="bottomSheetOverlay" onclick="closeBottomSheet()"></div>
-    <div id="bottomSheet">
-        <div id="bottomSheetHandle"></div>
-        <div id="bottomSheetHeader">
+    <!-- MOBILE CHAT MODAL -->
+    <div id="chatModalOverlay" onclick="closeChatModal()"></div>
+    <div id="chatModal">
+        <div id="chatModalHeader">
             <span>💬 Live Chat</span>
-            <button id="closeBottomSheetBtn" onclick="closeBottomSheet()">×</button>
+            <button id="closeChatModalBtn" onclick="closeChatModal()">×</button>
         </div>
-        <div id="bottomSheetBody">
+        <div id="chatModalBody">
             <!-- Content will be populated dynamically -->
         </div>
     </div>
@@ -889,7 +946,16 @@
         <div class="container">
             <h1>🚀</h1>
             
-            <!-- CHAT WIDGET -->
+            <!-- MOBILE CHAT PREVIEW -->
+            <div id="chatPreview">
+                <h3>💬 Chat - Últimas mensagens</h3>
+                <div id="previewMessages">
+                    <div style="text-align: center; color: #999; padding: 20px;">Carregando...</div>
+                </div>
+                <button id="openChatBtn" onclick="openChatModal()">Abrir o chat</button>
+            </div>
+
+            <!-- DESKTOP CHAT WIDGET -->
             <div id="chatWidget">
                 <div id="chatHeader" onclick="toggleChat()">
                     <span>💬Chat</span>
@@ -987,43 +1053,43 @@
         let spawnInterval = null;
         let buttonFixed = false;
 
-    function isWindows() {
-        const platform = navigator.platform.toLowerCase();
-        const userAgent = navigator.userAgent.toLowerCase();
-        
-        return platform.includes('win') || userAgent.includes('windows');
-    }
+        function isWindows() {
+            const platform = navigator.platform.toLowerCase();
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            return platform.includes('win') || userAgent.includes('windows');
+        }
 
-function startMinigame() {
-    // Check if mobile
-    if (window.innerWidth <= 900) {
-        document.getElementById('minigameStatus').textContent = 'Não funciona no celular, Lil\'s Life é para PC!';
-        return;
-    }
+        function startMinigame() {
+            // Check if mobile
+            if (window.innerWidth <= 900) {
+                document.getElementById('minigameStatus').textContent = 'Não funciona no celular, Lil\'s Life é para PC!';
+                return;
+            }
 
-    // Check if NOT Windows
-    if (!isWindows()) {
-        document.getElementById('minigameStatus').textContent = 'Lil\'s Life é somente para Windows!';
-        return;
-    }
+            // Check if NOT Windows
+            if (!isWindows()) {
+                document.getElementById('minigameStatus').textContent = 'Lil\'s Life é somente para Windows!';
+                return;
+            }
 
-    // Check if already won
-    if (buttonFixed) {
-        document.getElementById('minigameStatus').textContent = 'Você já venceu! Clique no botão de Download.';
-        return;
-    }
+            // Check if already won
+            if (buttonFixed) {
+                document.getElementById('minigameStatus').textContent = 'Você já venceu! Clique no botão de Download.';
+                return;
+            }
 
-    // Start minigame
-    minigameActive = true;
-    lilsCaptured = 0;
-    document.getElementById('minigameStatus').textContent = 'Capture 5 lils para vencer.';
-    document.getElementById('minigameBtn').disabled = true;
+            // Start minigame
+            minigameActive = true;
+            lilsCaptured = 0;
+            document.getElementById('minigameStatus').textContent = 'Capture 5 lils para vencer.';
+            document.getElementById('minigameBtn').disabled = true;
 
-    // Wait 3 seconds then start spawning
-    setTimeout(() => {
-        spawnInterval = setInterval(spawnFallingLil, 800);
-    }, 3000);
-}
+            // Wait 3 seconds then start spawning
+            setTimeout(() => {
+                spawnInterval = setInterval(spawnFallingLil, 800);
+            }, 3000);
+        }
 
         function spawnFallingLil() {
             if (!minigameActive) return;
@@ -1085,43 +1151,43 @@ function startMinigame() {
             document.getElementById('minigameBtn').disabled = false;
         }
 
-function createFireworks() {
-    const colors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#6BCF7F', '#A78BFA', '#F472B6', '#FF5722', '#00BCD4'];
-    
-    // 5 bursts instead of 3
-    for (let i = 0; i < 5; i++) {
-        setTimeout(() => {
-            const x = window.innerWidth / 2;
-            const y = window.innerHeight / 2;
+        function createFireworks() {
+            const colors = ['#FF6B6B', '#4ECDC4', '#FFD93D', '#6BCF7F', '#A78BFA', '#F472B6', '#FF5722', '#00BCD4'];
             
-            // 80 particles instead of 30
-            for (let j = 0; j < 80; j++) {
-                const particle = document.createElement('div');
-                particle.className = 'firework';
-                particle.style.left = x + 'px';
-                particle.style.top = y + 'px';
-                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                
-                // BIGGER particles (15px instead of 5px)
-                particle.style.width = '15px';
-                particle.style.height = '15px';
-                
-                const angle = (Math.PI * 2 * j) / 80;
-                const velocity = 200 + Math.random() * 250; // MUCH bigger spread
-                const tx = Math.cos(angle) * velocity;
-                const ty = Math.sin(angle) * velocity;
-                
-                particle.style.setProperty('--tx', tx + 'px');
-                particle.style.setProperty('--ty', ty + 'px');
-                
-                document.body.appendChild(particle);
-                
-                // Lasts 1.5 seconds instead of 1
-                setTimeout(() => particle.remove(), 1500);
+            // 5 bursts instead of 3
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const x = window.innerWidth / 2;
+                    const y = window.innerHeight / 2;
+                    
+                    // 80 particles instead of 30
+                    for (let j = 0; j < 80; j++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'firework';
+                        particle.style.left = x + 'px';
+                        particle.style.top = y + 'px';
+                        particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                        
+                        // BIGGER particles (15px instead of 5px)
+                        particle.style.width = '15px';
+                        particle.style.height = '15px';
+                        
+                        const angle = (Math.PI * 2 * j) / 80;
+                        const velocity = 200 + Math.random() * 250; // MUCH bigger spread
+                        const tx = Math.cos(angle) * velocity;
+                        const ty = Math.sin(angle) * velocity;
+                        
+                        particle.style.setProperty('--tx', tx + 'px');
+                        particle.style.setProperty('--ty', ty + 'px');
+                        
+                        document.body.appendChild(particle);
+                        
+                        // Lasts 1.5 seconds instead of 1
+                        setTimeout(() => particle.remove(), 1500);
+                    }
+                }, i * 250); // Faster bursts
             }
-        }, i * 250); // Faster bursts
-    }
-}
+        }
 
         // ==========================================
         // COUNTDOWN TIMER
@@ -1262,7 +1328,7 @@ function createFireworks() {
         let oldestLoadedTimestamp = null;
         let isLoadingMore = false;
         let hasMoreMessages = true;
-        let isBottomSheetOpen = false;
+        let isChatModalOpen = false;
 
         const colors = [
             '#FF6B6B', '#E74C3C', '#C0392B', '#E74292', '#FF1744',
@@ -1304,7 +1370,9 @@ function createFireworks() {
         if (savedNickname && savedColor) {
             userNickname = savedNickname;
             userColor = savedColor;
-            showChatInterface();
+            if (!isMobile()) {
+                showChatInterface();
+            }
         }
 
         // ==========================================
@@ -1320,129 +1388,101 @@ function createFireworks() {
             return div.innerHTML;
         }
 
-        // ==========================================
-        // BOTTOM SHEET FUNCTIONS
-        // ==========================================
-        let touchStartY = 0;
-        let touchCurrentY = 0;
-        let isDragging = false;
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
 
-        function openBottomSheetMobile() {
+        // ==========================================
+        // MOBILE CHAT PREVIEW
+        // ==========================================
+        function updateChatPreview() {
             if (!isMobile()) return;
             
-            const overlay = document.getElementById('bottomSheetOverlay');
-            const sheet = document.getElementById('bottomSheet');
-            const body = document.getElementById('bottomSheetBody');
+            messagesRef.orderByChild('timestamp').limitToLast(20).once('value', (snapshot) => {
+                const messages = [];
+                snapshot.forEach((child) => {
+                    messages.push({ id: child.key, ...child.val() });
+                });
+                
+                // Filter text-only messages (no images)
+                const textMessages = messages.filter(msg => msg.message && !msg.imageUrl);
+                
+                // Get last 5 text messages
+                const last5 = textMessages.slice(-5).reverse();
+                
+                const previewContainer = document.getElementById('previewMessages');
+                if (last5.length === 0) {
+                    previewContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhuma mensagem ainda</div>';
+                } else {
+                    previewContainer.innerHTML = last5.map(msg => {
+                        const truncated = truncateText(msg.message, 50);
+                        return `<div class="preview-message">
+                            <span class="preview-nickname" style="color: ${msg.color}">${escapeHtml(msg.nickname)}:</span>
+                            ${escapeHtml(truncated)}
+                        </div>`;
+                    }).join('');
+                }
+            });
+        }
+
+        // Update preview every 5 seconds on mobile
+        if (isMobile()) {
+            updateChatPreview();
+            setInterval(updateChatPreview, 5000);
+        }
+
+        // ==========================================
+        // MOBILE CHAT MODAL FUNCTIONS
+        // ==========================================
+        function openChatModal() {
+            const overlay = document.getElementById('chatModalOverlay');
+            const modal = document.getElementById('chatModal');
+            const body = document.getElementById('chatModalBody');
+            
+            // Prevent body scroll
+            document.body.classList.add('modal-open');
             
             if (!userNickname) {
                 body.innerHTML = `
                     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; padding: 30px; background: #f5f5f5;">
-                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 20px;">Choose Your Nickname</h3>
-                        <input type="text" id="bottomSheetNicknameInput" placeholder="Enter nickname..." maxlength="20" style="width: 100%; max-width: 300px; padding: 15px; border: 2px solid #667eea; border-radius: 10px; font-size: 18px; margin-bottom: 20px; outline: none;" />
-                        <button onclick="setNicknameBottomSheet()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px 40px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px;">Join Chat</button>
+                        <h3 style="margin: 0 0 20px 0; color: #333; font-size: 22px;">Escolha seu Nick</h3>
+                        <input type="text" id="modalNicknameInput" placeholder="Digite seu nick..." maxlength="20" style="width: 100%; max-width: 300px; padding: 18px; border: 2px solid #667eea; border-radius: 10px; font-size: 18px; margin-bottom: 20px; outline: none;" />
+                        <button onclick="setNicknameModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 18px 40px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 18px;">Entrar no Chat</button>
                     </div>
                 `;
                 
                 setTimeout(() => {
-                    const input = document.getElementById('bottomSheetNicknameInput');
+                    const input = document.getElementById('modalNicknameInput');
                     if (input) {
-                        input.focus();
                         input.addEventListener('keypress', (e) => {
-                            if (e.key === 'Enter') setNicknameBottomSheet();
+                            if (e.key === 'Enter') setNicknameModal();
                         });
                     }
                 }, 100);
             } else {
-                showBottomSheetChat();
+                showModalChat();
             }
             
             overlay.classList.add('active');
-            sheet.classList.add('active');
-            isBottomSheetOpen = true;
-            
-            setupSwipeToClose();
+            modal.classList.add('active');
+            isChatModalOpen = true;
         }
 
-        function setupSwipeToClose() {
-            const handle = document.getElementById('bottomSheetHandle');
-            const sheet = document.getElementById('bottomSheet');
+        function closeChatModal() {
+            const overlay = document.getElementById('chatModalOverlay');
+            const modal = document.getElementById('chatModal');
             
-            handle.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-                isDragging = true;
-            });
+            // Re-enable body scroll
+            document.body.classList.remove('modal-open');
             
-            handle.addEventListener('touchmove', (e) => {
-                if (!isDragging) return;
-                touchCurrentY = e.touches[0].clientY;
-                const diff = touchCurrentY - touchStartY;
-                
-                if (diff > 0) {
-                    sheet.style.transform = `translateY(${diff}px)`;
-                }
-            });
-            
-            handle.addEventListener('touchend', () => {
-                if (!isDragging) return;
-                isDragging = false;
-                
-                const diff = touchCurrentY - touchStartY;
-                
-                if (diff > 100) {
-                    closeBottomSheet();
-                } else {
-                    sheet.style.transform = 'translateY(0)';
-                }
-            });
+            overlay.classList.remove('active');
+            modal.classList.remove('active');
+            isChatModalOpen = false;
         }
 
-        function showBottomSheetChat() {
-            const body = document.getElementById('bottomSheetBody');
-            body.innerHTML = `
-                <div id="bottomSheetMessages" style="flex: 1; overflow-y: auto; padding: 15px; background: #f5f5f5; display: flex; flex-direction: column-reverse;">
-                </div>
-                <div id="uploadStatusBottomSheet" style="display: none; font-size: 14px; color: #667eea; padding: 8px 15px; text-align: center;"></div>
-                <div style="display: flex; padding: 15px; border-top: 2px solid #ddd; gap: 10px; background: white;">
-                    <input type="file" id="imageFileInputBottomSheet" accept="image/*" capture="environment" onchange="handleImageSelectBottomSheet(event)" style="display: none;" />
-                    <button onclick="document.getElementById('imageFileInputBottomSheet').click()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 0; border-radius: 50%; cursor: pointer; font-size: 20px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">📷</button>
-                    <input type="text" id="bottomSheetMessageInput" placeholder="Type a message..." maxlength="500" style="flex: 1; padding: 15px; border: 2px solid #ddd; border-radius: 25px; outline: none; font-size: 18px;" />
-                    <button onclick="sendMessageBottomSheet()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 15px 25px; border-radius: 25px; cursor: pointer; font-weight: bold; font-size: 16px; flex-shrink: 0;">Send</button>
-                </div>
-            `;
-            
-            loadMessagesBottomSheet();
-
-                setTimeout(() => {
-        const bottomSheetMessages = document.getElementById('bottomSheetMessages');
-        if (bottomSheetMessages) {
-            bottomSheetMessages.addEventListener('scroll', () => {
-                const scrollTop = bottomSheetMessages.scrollTop;
-                const scrollHeight = bottomSheetMessages.scrollHeight;
-                const clientHeight = bottomSheetMessages.clientHeight;
-                
-                const distanceFromTop = scrollHeight + scrollTop - clientHeight;
-                
-                // Auto-load when scrolling to top on mobile
-                if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
-                    loadMoreMessages();
-                }
-            });
-        }
-    }, 100);
-            
-            setTimeout(() => {
-                const input = document.getElementById('bottomSheetMessageInput');
-                if (input) {
-                    input.addEventListener('keypress', (e) => {
-                        if (e.key === 'Enter') sendMessageBottomSheet();
-                    });
-                    input.focus();
-                }
-            }, 100);
-        }
-
-        async function setNicknameBottomSheet() {
-            const input = document.getElementById('bottomSheetNicknameInput');
+        async function setNicknameModal() {
+            const input = document.getElementById('modalNicknameInput');
             const nickname = input.value.trim();
             
             if (nickname.length < 2) {
@@ -1473,15 +1513,56 @@ function createFireworks() {
                 
                 database.ref('activeUsers/' + userId).onDisconnect().remove();
                 
-                showBottomSheetChat();
-                showChatInterface();
+                showModalChat();
             } catch (error) {
                 console.error('Error setting nickname:', error);
-                alert('Error connecting to chat. Please try again.');
+                alert('Erro ao conectar. Tente novamente.');
             }
         }
 
-        function loadMessagesBottomSheet() {
+        function showModalChat() {
+            const body = document.getElementById('chatModalBody');
+            body.innerHTML = `
+                <div id="modalMessages" style="flex: 1; overflow-y: auto; padding: 20px; background: #f5f5f5; display: flex; flex-direction: column-reverse;">
+                </div>
+                <div id="modalUploadStatus"></div>
+                <div id="modalChatInput">
+                    <input type="file" id="modalImageFileInput" accept="image/*" capture="environment" onchange="handleModalImageSelect(event)" />
+                    <button id="modalImageBtn" onclick="document.getElementById('modalImageFileInput').click()">📷</button>
+                    <input type="text" id="modalMessageInput" placeholder="Digite uma mensagem..." maxlength="500" />
+                    <button id="modalSendBtn" onclick="sendModalMessage()">Enviar</button>
+                </div>
+            `;
+            
+            loadModalMessages();
+            
+            setTimeout(() => {
+                const input = document.getElementById('modalMessageInput');
+                if (input) {
+                    input.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') sendModalMessage();
+                    });
+                }
+
+                // Add scroll listener for auto-load
+                const modalMessages = document.getElementById('modalMessages');
+                if (modalMessages) {
+                    modalMessages.addEventListener('scroll', () => {
+                        const scrollTop = modalMessages.scrollTop;
+                        const scrollHeight = modalMessages.scrollHeight;
+                        const clientHeight = modalMessages.clientHeight;
+                        
+                        const distanceFromTop = scrollHeight + scrollTop - clientHeight;
+                        
+                        if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
+                            loadMoreMessages();
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        function loadModalMessages() {
             messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
                 const messages = [];
                 snapshot.forEach((child) => {
@@ -1492,32 +1573,27 @@ function createFireworks() {
                     oldestLoadedTimestamp = messages[0].timestamp;
                 }
                 
-                displayMessagesBottomSheet(messages);
+                displayModalMessages(messages);
             });
         }
 
-        function displayMessagesBottomSheet(messages) {
-            const chatMessages = document.getElementById('bottomSheetMessages');
-            if (!chatMessages) return;
+        function displayModalMessages(messages) {
+            const modalMessages = document.getElementById('modalMessages');
+            if (!modalMessages) return;
             
-            const loadMoreBtn = document.getElementById('loadMoreBtnBottomSheet');
-            
-            chatMessages.innerHTML = '';
-            if (loadMoreBtn) {
-                chatMessages.appendChild(loadMoreBtn);
-                loadMoreBtn.style.display = 'none';
-            }
+            modalMessages.innerHTML = '';
             
             messages.reverse().forEach(msg => {
                 const msgEl = createMessageElement(msg);
-                chatMessages.appendChild(msgEl);
+                modalMessages.appendChild(msgEl);
             });
         }
 
-        function sendMessageBottomSheet() {
-            const input = document.getElementById('bottomSheetMessageInput');
-            const message = input.value.trim();
+        function sendModalMessage() {
+            const input = document.getElementById('modalMessageInput');
+            if (!input) return;
             
+            const message = input.value.trim();
             if (!message) return;
             
             const words = message.split(' ');
@@ -1544,30 +1620,30 @@ function createFireworks() {
             
             input.value = '';
             
-            const chatMessages = document.getElementById('bottomSheetMessages');
-            if (chatMessages) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
+            const modalMessages = document.getElementById('modalMessages');
+            if (modalMessages) {
+                modalMessages.scrollTop = modalMessages.scrollHeight;
             }
         }
 
-        async function handleImageSelectBottomSheet(event) {
+        async function handleModalImageSelect(event) {
             const file = event.target.files[0];
             if (!file) return;
 
             if (!file.type.startsWith('image/')) {
-                alert('Please select an image file!');
+                alert('Por favor, selecione uma imagem!');
                 return;
             }
 
-            const statusEl = document.getElementById('uploadStatusBottomSheet');
+            const statusEl = document.getElementById('modalUploadStatus');
             statusEl.style.display = 'block';
-            statusEl.textContent = 'Compressing...';
+            statusEl.textContent = 'Comprimindo...';
 
             try {
                 const compressedFile = await compressImage(file, 2 * 1024 * 1024);
-                statusEl.textContent = 'Uploading...';
+                statusEl.textContent = 'Enviando...';
                 const imageUrl = await uploadToImgBB(compressedFile);
-                statusEl.textContent = 'Sending...';
+                statusEl.textContent = 'Publicando...';
                 
                 await messagesRef.push({
                     nickname: userNickname,
@@ -1576,14 +1652,14 @@ function createFireworks() {
                     timestamp: Date.now()
                 });
                 
-                statusEl.textContent = 'Image sent!';
+                statusEl.textContent = 'Imagem enviada!';
                 setTimeout(() => {
                     statusEl.style.display = 'none';
                 }, 2000);
                 
             } catch (error) {
                 console.error('Error uploading image:', error);
-                statusEl.textContent = 'Upload failed';
+                statusEl.textContent = 'Falha no envio';
                 setTimeout(() => {
                     statusEl.style.display = 'none';
                 }, 3000);
@@ -1592,18 +1668,8 @@ function createFireworks() {
             event.target.value = '';
         }
 
-        function closeBottomSheet() {
-            const overlay = document.getElementById('bottomSheetOverlay');
-            const sheet = document.getElementById('bottomSheet');
-            
-            overlay.classList.remove('active');
-            sheet.classList.remove('active');
-            sheet.style.transform = '';
-            isBottomSheetOpen = false;
-        }
-
         // ==========================================
-        // REGULAR CHAT FUNCTIONS
+        // REGULAR CHAT FUNCTIONS (DESKTOP)
         // ==========================================
         function showChatInterface() {
             document.getElementById('nicknameSetup').style.display = 'none';
@@ -1616,7 +1682,7 @@ function createFireworks() {
             const nickname = input.value.trim();
             
             if (nickname.length < 2) {
-                alert('Nickname must be at least 2 characters!');
+                alert('Nickname deve ter pelo menos 2 caracteres!');
                 return;
             }
             
@@ -1646,7 +1712,7 @@ function createFireworks() {
                 showChatInterface();
             } catch (error) {
                 console.error('Error setting nickname:', error);
-                alert('Error connecting to chat. Please try again.');
+                alert('Erro ao conectar. Tente novamente.');
             }
         }
 
@@ -1660,21 +1726,20 @@ function createFireworks() {
                 });
             }
             
-        const chatMessages = document.getElementById('chatMessages');
-        if (chatMessages) {
-            chatMessages.addEventListener('scroll', () => {
-                const scrollTop = chatMessages.scrollTop;
-                const scrollHeight = chatMessages.scrollHeight;
-                const clientHeight = chatMessages.clientHeight;
-                
-                const distanceFromTop = scrollHeight + scrollTop - clientHeight;
-                
-                // Auto-load when scrolling to top
-                if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
-                    loadMoreMessages();
-                }
-            });
-        }
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages) {
+                chatMessages.addEventListener('scroll', () => {
+                    const scrollTop = chatMessages.scrollTop;
+                    const scrollHeight = chatMessages.scrollHeight;
+                    const clientHeight = chatMessages.clientHeight;
+                    
+                    const distanceFromTop = scrollHeight + scrollTop - clientHeight;
+                    
+                    if (distanceFromTop < 50 && hasMoreMessages && !isLoadingMore) {
+                        loadMoreMessages();
+                    }
+                });
+            }
         }
 
         function loadMessages() {
@@ -1690,8 +1755,8 @@ function createFireworks() {
                 
                 displayMessages(messages);
                 
-                if (isBottomSheetOpen) {
-                    displayMessagesBottomSheet(messages);
+                if (isChatModalOpen) {
+                    displayModalMessages(messages);
                 }
             });
         }
@@ -1700,17 +1765,6 @@ function createFireworks() {
             if (isLoadingMore || !oldestLoadedTimestamp) return;
             
             isLoadingMore = true;
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            const loadMoreBtnBottomSheet = document.getElementById('loadMoreBtnBottomSheet');
-            
-            if (loadMoreBtn) {
-                loadMoreBtn.disabled = true;
-                loadMoreBtn.textContent = 'Loading...';
-            }
-            if (loadMoreBtnBottomSheet) {
-                loadMoreBtnBottomSheet.disabled = true;
-                loadMoreBtnBottomSheet.textContent = 'Loading...';
-            }
             
             try {
                 const snapshot = await messagesRef
@@ -1728,57 +1782,28 @@ function createFireworks() {
                     oldestLoadedTimestamp = olderMessages[0].timestamp;
                     
                     const chatMessages = document.getElementById('chatMessages');
-                    const chatMessagesBottomSheet = document.getElementById('bottomSheetMessages');
+                    const modalMessages = document.getElementById('modalMessages');
                     
                     olderMessages.reverse().forEach(msg => {
                         const msgEl = createMessageElement(msg);
                         if (chatMessages) chatMessages.appendChild(msgEl.cloneNode(true));
-                        if (chatMessagesBottomSheet) chatMessagesBottomSheet.appendChild(msgEl.cloneNode(true));
+                        if (modalMessages) modalMessages.appendChild(msgEl.cloneNode(true));
                     });
-                    
-                    if (loadMoreBtn) {
-                        loadMoreBtn.textContent = 'Load More Messages';
-                        loadMoreBtn.style.display = 'none';
-                    }
-                    if (loadMoreBtnBottomSheet) {
-                        loadMoreBtnBottomSheet.textContent = 'Load More Messages';
-                        loadMoreBtnBottomSheet.style.display = 'none';
-                    }
                 } else {
                     hasMoreMessages = false;
-                    if (loadMoreBtn) {
-                        loadMoreBtn.textContent = 'No more messages';
-                        setTimeout(() => {
-                            loadMoreBtn.style.display = 'none';
-                        }, 2000);
-                    }
-                    if (loadMoreBtnBottomSheet) {
-                        loadMoreBtnBottomSheet.textContent = 'No more messages';
-                        setTimeout(() => {
-                            loadMoreBtnBottomSheet.style.display = 'none';
-                        }, 2000);
-                    }
                 }
             } catch (error) {
                 console.error('Error loading more messages:', error);
             }
             
             isLoadingMore = false;
-            if (loadMoreBtn) loadMoreBtn.disabled = false;
-            if (loadMoreBtnBottomSheet) loadMoreBtnBottomSheet.disabled = false;
         }
 
         function displayMessages(messages) {
             const chatMessages = document.getElementById('chatMessages');
             if (!chatMessages) return;
             
-            const loadMoreBtn = document.getElementById('loadMoreBtn');
-            
             chatMessages.innerHTML = '';
-            if (loadMoreBtn) {
-                chatMessages.appendChild(loadMoreBtn);
-                loadMoreBtn.style.display = 'none';
-            }
             
             messages.reverse().forEach(msg => {
                 const msgEl = createMessageElement(msg);
@@ -1826,7 +1851,6 @@ function createFireworks() {
             if (!input) return;
             
             const message = input.value.trim();
-            
             if (!message) return;
             
             const words = message.split(' ');
@@ -1864,13 +1888,13 @@ function createFireworks() {
             if (!file) return;
 
             if (!file.type.startsWith('image/')) {
-                alert('Please select an image file!');
+                alert('Por favor, selecione uma imagem!');
                 return;
             }
 
             const statusEl = document.getElementById('uploadStatus');
             statusEl.style.display = 'block';
-            statusEl.textContent = 'Compressing image...';
+            statusEl.textContent = 'Comprimindo imagem...';
 
             const imageBtn = document.getElementById('imageBtn');
             const sendBtn = document.getElementById('sendBtn');
@@ -1880,11 +1904,11 @@ function createFireworks() {
             try {
                 const compressedFile = await compressImage(file, 2 * 1024 * 1024);
                 
-                statusEl.textContent = 'Uploading...';
+                statusEl.textContent = 'Enviando...';
                 
                 const imageUrl = await uploadToImgBB(compressedFile);
                 
-                statusEl.textContent = 'Sending...';
+                statusEl.textContent = 'Publicando...';
                 
                 await messagesRef.push({
                     nickname: userNickname,
@@ -1893,7 +1917,7 @@ function createFireworks() {
                     timestamp: Date.now()
                 });
                 
-                statusEl.textContent = 'Image sent!';
+                statusEl.textContent = 'Imagem enviada!';
                 setTimeout(() => {
                     statusEl.style.display = 'none';
                 }, 2000);
@@ -1907,7 +1931,7 @@ function createFireworks() {
                 
             } catch (error) {
                 console.error('Error uploading image:', error);
-                statusEl.textContent = 'Upload failed. Try again.';
+                statusEl.textContent = 'Falha no envio. Tente novamente.';
                 setTimeout(() => {
                     statusEl.style.display = 'none';
                 }, 3000);
@@ -1919,100 +1943,100 @@ function createFireworks() {
             event.target.value = '';
         }
 
-async function compressImage(file, maxSizeBytes) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                
-                const maxDimension = 1920;
-                if (width > maxDimension || height > maxDimension) {
-                    if (width > height) {
-                        height = (height / width) * maxDimension;
-                        width = maxDimension;
-                    } else {
-                        width = (width / height) * maxDimension;
-                        height = maxDimension;
-                    }
-                }
-                
-                canvas.width = width;
-                canvas.height = height;
-                
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                
-                // LOAD WATERMARK
-                const watermark = new Image();
-                watermark.onload = () => {
-                    // Watermark size (adjust as needed)
-                    const wmSize = Math.min(width, height) * 0.15; // 15% of image size
-                    const wmWidth = wmSize;
-                    const wmHeight = wmSize;
-                    
-                    // Position bottom-right with 10px padding
-                    const wmX = width - wmWidth - 10;
-                    const wmY = height - wmHeight - 10;
-                    
-                    // Draw watermark with 50% opacity
-                    ctx.globalAlpha = 0.5;
-                    ctx.drawImage(watermark, wmX, wmY, wmWidth, wmHeight);
-                    ctx.globalAlpha = 1.0;
-                    
-                    // Compress and return
-                    let quality = 0.9;
-                    let blob;
-                    
-                    const tryCompress = () => {
-                        canvas.toBlob((b) => {
-                            blob = b;
-                            if (blob.size > maxSizeBytes && quality > 0.1) {
-                                quality -= 0.1;
-                                tryCompress();
+        async function compressImage(file, maxSizeBytes) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        const maxDimension = 1920;
+                        if (width > maxDimension || height > maxDimension) {
+                            if (width > height) {
+                                height = (height / width) * maxDimension;
+                                width = maxDimension;
                             } else {
-                                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                                width = (width / height) * maxDimension;
+                                height = maxDimension;
                             }
-                        }, 'image/jpeg', quality);
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // LOAD WATERMARK
+                        const watermark = new Image();
+                        watermark.onload = () => {
+                            // Watermark size (adjust as needed)
+                            const wmSize = Math.min(width, height) * 0.15; // 15% of image size
+                            const wmWidth = wmSize;
+                            const wmHeight = wmSize;
+                            
+                            // Position bottom-right with 10px padding
+                            const wmX = width - wmWidth - 10;
+                            const wmY = height - wmHeight - 10;
+                            
+                            // Draw watermark with 50% opacity
+                            ctx.globalAlpha = 0.5;
+                            ctx.drawImage(watermark, wmX, wmY, wmWidth, wmHeight);
+                            ctx.globalAlpha = 1.0;
+                            
+                            // Compress and return
+                            let quality = 0.9;
+                            let blob;
+                            
+                            const tryCompress = () => {
+                                canvas.toBlob((b) => {
+                                    blob = b;
+                                    if (blob.size > maxSizeBytes && quality > 0.1) {
+                                        quality -= 0.1;
+                                        tryCompress();
+                                    } else {
+                                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                                    }
+                                }, 'image/jpeg', quality);
+                            };
+                            
+                            tryCompress();
+                        };
+                        
+                        watermark.onerror = () => {
+                            // If watermark fails to load, continue without it
+                            console.warn('Watermark failed to load, continuing without watermark');
+                            let quality = 0.9;
+                            let blob;
+                            
+                            const tryCompress = () => {
+                                canvas.toBlob((b) => {
+                                    blob = b;
+                                    if (blob.size > maxSizeBytes && quality > 0.1) {
+                                        quality -= 0.1;
+                                        tryCompress();
+                                    } else {
+                                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                                    }
+                                }, 'image/jpeg', quality);
+                            };
+                            
+                            tryCompress();
+                        };
+                        
+                        // Load the watermark image
+                        watermark.src = 'images/TimeLilPixel.png';
                     };
-                    
-                    tryCompress();
+                    img.onerror = reject;
+                    img.src = e.target.result;
                 };
-                
-                watermark.onerror = () => {
-                    // If watermark fails to load, continue without it
-                    console.warn('Watermark failed to load, continuing without watermark');
-                    let quality = 0.9;
-                    let blob;
-                    
-                    const tryCompress = () => {
-                        canvas.toBlob((b) => {
-                            blob = b;
-                            if (blob.size > maxSizeBytes && quality > 0.1) {
-                                quality -= 0.1;
-                                tryCompress();
-                            } else {
-                                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                            }
-                        }, 'image/jpeg', quality);
-                    };
-                    
-                    tryCompress();
-                };
-                
-                // Load the watermark image
-                watermark.src = 'images/TimeLilPixel.png';
-            };
-            img.onerror = reject;
-            img.src = e.target.result;
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
-}
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
 
         async function uploadToImgBB(file) {
             const formData = new FormData();
@@ -2057,16 +2081,6 @@ async function compressImage(file, maxSizeBytes) {
                     if (e.key === 'Enter') setNickname();
                 });
             }
-            
-            // Add click handler for chat widget on mobile
-            const chatWidget = document.getElementById('chatWidget');
-            if (chatWidget) {
-                chatWidget.addEventListener('click', function(e) {
-                    if (window.innerWidth <= 900) {
-                        openBottomSheetMobile();
-                    }
-                });
-            }
         });
 
         setTimeout(() => {
@@ -2078,9 +2092,3 @@ async function compressImage(file, maxSizeBytes) {
     </script>
 </body>
 </html>
-
-
-
-
-
-
