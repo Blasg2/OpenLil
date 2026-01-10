@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My Page</title>
     <style>
         * {
@@ -1409,7 +1409,7 @@
                 const textMessages = messages.filter(msg => msg.message && !msg.imageUrl);
                 
                 // Get last 5 text messages
-                const last5 = textMessages.slice(-5).reverse();
+                const last5 = textMessages.slice(-5);
                 
                 const previewContainer = document.getElementById('previewMessages');
                 if (last5.length === 0) {
@@ -2092,3 +2092,4 @@
     </script>
 </body>
 </html>
+
