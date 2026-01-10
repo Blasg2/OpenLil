@@ -163,7 +163,7 @@
             position: relative;
             height: 120px;
             margin: 30px 0;
-            overflow: hidden;
+            overflow: visible;
         }
         
         #downloadBtn {
@@ -1364,9 +1364,17 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
                     offsetX -= Math.cos(adjustedAngle) * moveDistance;
                     offsetY -= Math.sin(adjustedAngle) * moveDistance;
                     
-                    const maxX = Math.min(150, (window.innerWidth - 200) / 2);
-                    offsetX = Math.max(-maxX, Math.min(maxX, offsetX));
-                    offsetY = Math.max(-40, Math.min(40, offsetY));
+                    // Calculate safe movement range based on screen width
+                    const screenWidth = window.innerWidth;
+                    const maxMoveX = Math.min(200, (screenWidth - 250) / 2); // Safe horizontal range
+                    const maxMoveY = 40; // Reduced vertical range
+                    
+                    offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
+                    offsetY = (Math.random() - 0.5) * (maxMoveY * 2);
+                    
+                    // Clamp values
+                    offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+                    offsetY = Math.max(-maxMoveY, Math.min(maxMoveY, offsetY));
                     
                     btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
                 }
@@ -1380,8 +1388,17 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
             // Don't move button if minigame is won
             if (buttonFixed) return;
 
-            offsetX = (Math.random() - 0.5) * 800;
-            offsetY = (Math.random() - 0.5) * 120;
+// Calculate safe movement range based on screen width
+const screenWidth = window.innerWidth;
+const maxMoveX = Math.min(200, (screenWidth - 250) / 2); // Safe horizontal range
+const maxMoveY = 40; // Reduced vertical range
+
+offsetX = (Math.random() - 0.5) * (maxMoveX * 2);
+offsetY = (Math.random() - 0.5) * (maxMoveY * 2);
+
+// Clamp values
+offsetX = Math.max(-maxMoveX, Math.min(maxMoveX, offsetX));
+offsetY = Math.max(-maxMoveY, Math.min(maxMoveY, offsetY));
             btn.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
         }
 
@@ -2177,6 +2194,7 @@ document.getElementById('debugWidth').textContent = 'Width: ' + window.innerWidt
     </script>
 </body>
 </html>
+
 
 
 
