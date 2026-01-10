@@ -1062,6 +1062,12 @@
     </style>
 </head>
 <body>
+<div style="position: fixed; top: 10px; left: 10px; background: red; color: white; padding: 10px; z-index: 99999;">
+    Screen: <span id="screenDebug"></span>px
+</div>
+<script>
+    document.getElementById('screenDebug').textContent = window.innerWidth;
+</script>
     <!-- IMAGE LIGHTBOX -->
     <div id="imageLightbox" onclick="closeLightbox()">
         <button id="closeLightbox">×</button>
@@ -2267,6 +2273,7 @@
     </script>
 </body>
 </html>
+
 
 
 
