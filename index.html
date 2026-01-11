@@ -1856,7 +1856,7 @@ function updateChatPreview() {
             statusEl.textContent = 'Comprimindo...';
 
             try {
-                const compressedFile = await compressImage(file, 2 * 1024 * 1024);
+                const compressedFile = await compressImage(file, 500 * 1024);
                 statusEl.textContent = 'Enviando...';
                 const imageUrl = await uploadToImgBB(compressedFile);
                 statusEl.textContent = 'Publicando...';
@@ -2118,7 +2118,7 @@ function updateChatPreview() {
             if (sendBtn) sendBtn.disabled = true;
 
             try {
-                const compressedFile = await compressImage(file, 2 * 1024 * 1024);
+                const compressedFile = await compressImage(file, 500 * 1024);
                 
                 statusEl.textContent = 'Enviando...';
                 
@@ -2308,6 +2308,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
