@@ -1110,7 +1110,6 @@
         </a>
         
         <div class="container">
-            <h1>🚀</h1>
             <h2 style="display: none;">Lil's Life Launch</h2>
             
             <!-- MOBILE CHAT PREVIEW -->
@@ -1164,34 +1163,34 @@
             <!-- TIMER -->
             <div class="timer-wrapper">
                 <div class="timer-grid">
-                    <!-- Days -->
-                    <div class="time-box">
-                        <span class="time-number" id="days">7</span>
-                        <span class="time-label">Dias</span>
-                    </div>
-                    
-                    <!-- Hours -->
-                    <div class="time-box">
-                        <span class="time-number" id="hours">00</span>
-                        <span class="time-label">Horas</span>
-                    </div>
-                    
-                    <!-- Character -->
-                    <div class="character-slot">
-                        <img src="images/TimeLilPixel.png" alt="Time Lil" class="character-img">
-                    </div>
-                    
-                    <!-- Minutes -->
-                    <div class="time-box">
-                        <span class="time-number" id="minutes">00</span>
-                        <span class="time-label">Minutos</span>
-                    </div>
-                    
-                    <!-- Seconds -->
-                    <div class="time-box">
-                        <span class="time-number" id="seconds">00</span>
-                        <span class="time-label">Segundos</span>
-                    </div>
+<!-- Days -->
+<div class="time-box">
+    <span class="time-number" id="days">7</span>
+    <span class="time-label" id="daysLabel">Dias</span>
+</div>
+
+<!-- Hours -->
+<div class="time-box">
+    <span class="time-number" id="hours">00</span>
+    <span class="time-label" id="hoursLabel">Horas</span>
+</div>
+
+<!-- Character -->
+<div class="character-slot">
+    <img src="images/TimeLilPixel.png" alt="Time Lil" class="character-img">
+</div>
+
+<!-- Minutes -->
+<div class="time-box">
+    <span class="time-number" id="minutes">00</span>
+    <span class="time-label" id="minutesLabel">Minutos</span>
+</div>
+
+<!-- Seconds -->
+<div class="time-box">
+    <span class="time-number" id="seconds">00</span>
+    <span class="time-label">Segundos</span>
+</div>
                 </div>
             </div>
             
@@ -1363,29 +1362,35 @@
         // ==========================================
         const targetDate = new Date('2026-01-13T00:00:00').getTime();
         
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const distance = targetDate - now;
-            
-            if (distance < 0) {
-                document.getElementById('days').textContent = "00";
-                document.getElementById('hours').textContent = "00";
-                document.getElementById('minutes').textContent = "00";
-                document.getElementById('seconds').textContent = "00";
-                clearInterval(timerInterval);
-                return;
-            }
-            
-            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            
-            updateNumber('days', days.toString());
-            updateNumber('hours', hours.toString().padStart(2, '0'));
-            updateNumber('minutes', minutes.toString().padStart(2, '0'));
-            updateNumber('seconds', seconds.toString().padStart(2, '0'));
-        }
+       function updateCountdown() {
+    const now = new Date().getTime();
+    const distance = targetDate - now;
+    
+    if (distance < 0) {
+        document.getElementById('days').textContent = "00";
+        document.getElementById('hours').textContent = "00";
+        document.getElementById('minutes').textContent = "00";
+        document.getElementById('seconds').textContent = "00";
+        clearInterval(timerInterval);
+        return;
+    }
+    
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+    updateNumber('days', days.toString());
+    updateNumber('hours', hours.toString().padStart(2, '0'));
+    updateNumber('minutes', minutes.toString().padStart(2, '0'));
+    updateNumber('seconds', seconds.toString().padStart(2, '0'));
+    
+    // Update labels based on values
+    document.querySelector('#days').nextElementSibling.textContent = days === 1 ? 'Dia' : 'Dias';
+    document.querySelector('#hours').nextElementSibling.textContent = hours === 1 ? 'Hora' : 'Horas';
+    document.querySelector('#minutes').nextElementSibling.textContent = minutes === 1 ? 'Minuto' : 'Minutos';
+    // Segundos always stays plural
+}
         
         function updateNumber(id, value) {
             const element = document.getElementById(id);
@@ -1589,35 +1594,50 @@
         // ==========================================
         // MOBILE CHAT PREVIEW
         // ==========================================
-        function updateChatPreview() {
-            if (!isMobile()) return;
-            
-            messagesRef.orderByChild('timestamp').limitToLast(20).once('value', (snapshot) => {
-                const messages = [];
-                snapshot.forEach((child) => {
-                    messages.push({ id: child.key, ...child.val() });
-                });
+function updateChatPreview() {
+    if (!isMobile()) return;
+    
+    messagesRef.orderByChild('timestamp').limitToLast(20).once('value', (snapshot) => {
+        const messages = [];
+        snapshot.forEach((child) => {
+            messages.push({ id: child.key, ...child.val() });
+        });
+        
+        // Filter text-only messages (no images)
+        const textMessages = messages.filter(msg => msg.message && !msg.imageUrl);
+        
+        // Get last 8 text messages (was 5)
+        const last8 = textMessages.slice(-8);
+        
+        const previewContainer = document.getElementById('previewMessages');
+        if (last8.length === 0) {
+            previewContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhuma mensagem ainda</div>';
+        } else {
+            previewContainer.innerHTML = last8.map(msg => {
+                const truncated = truncateText(msg.message, 50);
                 
-                // Filter text-only messages (no images)
-                const textMessages = messages.filter(msg => msg.message && !msg.imageUrl);
-                
-                // Get last 5 text messages
-                const last5 = textMessages.slice(-5);
-                
-                const previewContainer = document.getElementById('previewMessages');
-                if (last5.length === 0) {
-                    previewContainer.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">Nenhuma mensagem ainda</div>';
+                // Process transformed words for preview
+                let displayMessage = truncated;
+                if (msg.transformedIndices && msg.transformedIndices.length > 0) {
+                    const words = truncated.split(' ');
+                    displayMessage = words.map((word, index) => {
+                        if (msg.transformedIndices.includes(index)) {
+                            return `<span style="color: red; font-weight: bold;">${escapeHtml(word)}</span>`;
+                        }
+                        return escapeHtml(word);
+                    }).join(' ');
                 } else {
-                    previewContainer.innerHTML = last5.map(msg => {
-                        const truncated = truncateText(msg.message, 50);
-                        return `<div class="preview-message">
-                            <span class="preview-nickname" style="color: ${msg.color}">${escapeHtml(msg.nickname)}:</span>
-                            ${escapeHtml(truncated)}
-                        </div>`;
-                    }).join('');
+                    displayMessage = escapeHtml(truncated);
                 }
-            });
+                
+                return `<div class="preview-message">
+                    <span class="preview-nickname" style="color: ${msg.color}">${escapeHtml(msg.nickname)}:</span>
+                    ${displayMessage}
+                </div>`;
+            }).join('');
         }
+    });
+}
 
         // Update preview every 5 seconds on mobile
         if (isMobile()) {
@@ -2288,6 +2308,7 @@
     </script>
 </body>
 </html>
+
 
 
 
