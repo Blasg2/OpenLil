@@ -1262,9 +1262,9 @@
 
         function spawnFallingLil() {
             if (!minigameActive) return;
-
+        
             const lil = document.createElement('img');
-            lil.src = 'images/LilParaquedas.png';
+            lil.src = 'images/TimeLilPixel.png';
             lil.className = 'falling-lil';
             
             // Random horizontal position
@@ -1283,9 +1283,9 @@
             
             document.body.appendChild(lil);
             
-            // Remove after animation ends
+            // Remove after animation ends - BUT ONLY if not caged!
             setTimeout(() => {
-                if (lil.parentNode) {
+                if (lil.parentNode && !lil.classList.contains('caged')) {  // <-- ADD THIS CHECK
                     lil.remove();
                 }
             }, duration * 1000);
@@ -2335,6 +2335,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
