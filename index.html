@@ -86,7 +86,7 @@
             font-size: 16px;
             font-weight: bold;
             margin: 20px auto;
-            display: block;
+            display: none; /* Hidden until timer reaches 0 */
             transition: all 0.3s ease;
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
@@ -1304,7 +1304,7 @@
             }
         }
 
-        function winMinigame() {
+               function winMinigame() {
             minigameActive = false;
             buttonFixed = true;
             clearInterval(spawnInterval);
@@ -1318,6 +1318,13 @@
             // Update status
             document.getElementById('minigameStatus').textContent = 'Você conseguiu! Agora clique no botão de Download.';
             document.getElementById('minigameBtn').disabled = false;
+            
+            // Make download button functional
+            const downloadBtn = document.getElementById('downloadBtn');
+            downloadBtn.onclick = function() {
+                window.location.href = 'WRITE_YOUR_DIRECT_DOWNLOAD_LINK_HERE';
+            };
+            downloadBtn.style.cursor = 'pointer';
         }
 
         function createFireworks() {
@@ -1363,35 +1370,39 @@
         // ==========================================
         const targetDate = new Date('2026-01-13T00:00:00').getTime();
         
-       function updateCountdown() {
-    const now = new Date().getTime();
-    const distance = targetDate - now;
-    
-    if (distance < 0) {
-        document.getElementById('days').textContent = "00";
-        document.getElementById('hours').textContent = "00";
-        document.getElementById('minutes').textContent = "00";
-        document.getElementById('seconds').textContent = "00";
-        clearInterval(timerInterval);
-        return;
-    }
-    
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    
-    updateNumber('days', days.toString());
-    updateNumber('hours', hours.toString().padStart(2, '0'));
-    updateNumber('minutes', minutes.toString().padStart(2, '0'));
-    updateNumber('seconds', seconds.toString().padStart(2, '0'));
-    
-    // Update labels based on values
-    document.querySelector('#days').nextElementSibling.textContent = days === 1 ? 'Dia' : 'Dias';
-    document.querySelector('#hours').nextElementSibling.textContent = hours === 1 ? 'Hora' : 'Horas';
-    document.querySelector('#minutes').nextElementSibling.textContent = minutes === 1 ? 'Minuto' : 'Minutos';
-    // Segundos always stays plural
-}
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+            
+            if (distance < 0) {
+                document.getElementById('days').textContent = "00";
+                document.getElementById('hours').textContent = "00";
+                document.getElementById('minutes').textContent = "00";
+                document.getElementById('seconds').textContent = "00";
+                clearInterval(timerInterval);
+                
+                // Show minigame button when timer reaches 0
+                document.getElementById('minigameBtn').style.display = 'block';
+                
+                return;
+            }
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            updateNumber('days', days.toString());
+            updateNumber('hours', hours.toString().padStart(2, '0'));
+            updateNumber('minutes', minutes.toString().padStart(2, '0'));
+            updateNumber('seconds', seconds.toString().padStart(2, '0'));
+            
+            // Update labels based on values
+            document.querySelector('#days').nextElementSibling.textContent = days === 1 ? 'Dia' : 'Dias';
+            document.querySelector('#hours').nextElementSibling.textContent = hours === 1 ? 'Hora' : 'Horas';
+            document.querySelector('#minutes').nextElementSibling.textContent = minutes === 1 ? 'Minuto' : 'Minutos';
+            // Segundos always stays plural
+        }
         
         function updateNumber(id, value) {
             const element = document.getElementById(id);
@@ -2309,6 +2320,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
