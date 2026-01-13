@@ -1417,19 +1417,18 @@
             }
         }
         
-        updateCountdown();
-        const timerInterval = setInterval(updateCountdown, 1000);
-        
-        // Check if timer is already at 0 on page load
-     // Check if timer is already at 0 on page load
-        if (targetDate - new Date().getTime() < 0) {
-            document.getElementById('minigameBtn').style.display = 'block';
-        }
-        
-        // ==========================================
-        // DOWNLOAD BUTTON
-        // ==========================================
-        const btn = document.getElementById('downloadBtn');
+updateCountdown();
+const timerInterval = setInterval(updateCountdown, 1000);
+
+// Check if timer is already at 0 on page load
+if (targetDate - new Date().getTime() < 0) {
+    document.getElementById('minigameBtn').style.display = 'block';
+}
+
+// ==========================================
+// DOWNLOAD BUTTON
+// ==========================================
+const btn = document.getElementById('downloadBtn');
         const buttonArea = document.querySelector('.button-area');
         
         let offsetX = 0;
@@ -2326,6 +2325,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
