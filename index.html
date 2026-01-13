@@ -1254,10 +1254,10 @@
             document.getElementById('minigameStatus').textContent = 'Capture 5 lils para vencer.';
             document.getElementById('minigameBtn').disabled = true;
 
-            // Wait 3 seconds then start spawning
+            // Wait x seconds then start spawning
             setTimeout(() => {
                 spawnInterval = setInterval(spawnFallingLil, 800);
-            }, 2000);
+            }, 1400);
         }
 
         function spawnFallingLil() {
@@ -2335,6 +2335,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
