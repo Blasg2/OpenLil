@@ -1291,30 +1291,34 @@
             }, duration * 1000);
         }
 
-                function captureLil(lil) {
-                    lilsCaptured++;
-                    
-                    // Save current position
-                    const rect = lil.getBoundingClientRect();
-                    lil.style.left = rect.left + 'px';
-                    lil.style.top = rect.top + 'px';
-                    
-                    // Pop animation (remove fall animation first)
-                    lil.style.animation = 'pop 0.3s ease-out forwards';
-                    setTimeout(() => lil.remove(), 300);
-                    
-                    // Check if won
-                    if (lilsCaptured >= 5) {
-                        winMinigame();
-                    }
+             function captureLil(lil) {
+                // Prevent multiple clicks
+                if (lil.classList.contains('caged')) return;
+                
+                lilsCaptured++;
+                
+                // Save current position and stop falling
+                const rect = lil.getBoundingClientRect();
+                lil.style.left = rect.left + 'px';
+                lil.style.top = rect.top + 'px';
+                lil.style.animation = 'none';
+                
+                // Change to caged image
+                lil.src = 'images/Caged.png';
+                lil.classList.add('caged');
+                
+                // Check if won
+                if (lilsCaptured >= 5) {
+                    winMinigame();
                 }
+            }
 
-               function winMinigame() {
+        function winMinigame() {
             minigameActive = false;
             buttonFixed = true;
             clearInterval(spawnInterval);
             
-            // Remove all falling lils
+            // Remove all falling lils AND caged lils
             document.querySelectorAll('.falling-lil').forEach(lil => lil.remove());
             
             // Show fireworks
@@ -1327,7 +1331,7 @@
             // Make download button functional
             const downloadBtn = document.getElementById('downloadBtn');
             downloadBtn.onclick = function() {
-                window.location.href = 'https://www.dropbox.com/scl/fi/f5sb0qrf5vjen7ckovpfd/lilPortraitFofis.png?rlkey=g4qhlx0qb9iv3gfmktucb2fpe&st=5wubb9b0&dl=1';
+                window.location.href = 'WRITE_YOUR_DIRECT_DOWNLOAD_LINK_HERE';
             };
             downloadBtn.style.cursor = 'pointer';
         }
@@ -2331,6 +2335,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
