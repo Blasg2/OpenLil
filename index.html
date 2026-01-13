@@ -1420,6 +1420,10 @@
         updateCountdown();
         const timerInterval = setInterval(updateCountdown, 1000);
         
+        // Check if timer is already at 0 on page load
+        if (targetDate - new Date().getTime() < 0) {
+            document.getElementById('minigameBtn').style.display = 'block';
+        
         // ==========================================
         // DOWNLOAD BUTTON
         // ==========================================
@@ -2320,6 +2324,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
