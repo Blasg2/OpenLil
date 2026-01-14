@@ -5,7 +5,6 @@
 <!-- chat gpt for PWA  -->
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b0b0b">
-
 <!-- iOS niceties -->
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1100,6 +1099,15 @@
     </style>
 </head>
 <body>
+    <!-- CHAT GPT BUTTON -->
+   <h1>Welcome</h1>
+  <p>This is the main site.</p>
+
+  <!-- Install PWA button -->
+  <button id="installBtn" style="display:none;">
+    Install Chat App
+  </button>
+    
     <!-- IMAGE LIGHTBOX -->
     <div id="imageLightbox" onclick="closeLightbox()">
         <button id="closeLightbox">×</button>
@@ -2353,6 +2361,10 @@ function updateChatPreview() {
     </script>
 
 
+
+
+    
+    
     <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -2360,9 +2372,28 @@ function updateChatPreview() {
     });
   }
 </script>
+
+<script>
+  let deferredPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); // prevent Chrome mini-infobar
+    deferredPrompt = e;
+    document.getElementById("installBtn").style.display = "inline-block";
+  });
+
+  document.getElementById("installBtn").addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+  });
+</script>
+
     
 </body>
 </html>
+
 
 
 
