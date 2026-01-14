@@ -1,9 +1,9 @@
 {
   "id": "/chat/",
-  "name": "LilsChat",
-  "short_name": "Lil's Chat",
+  "name": "Lil's Chat",
+  "short_name": "LilChat",
   "start_url": "/chat/",
-  "scope": "/",
+  "scope": "/chat/",
   "display": "standalone",
   "background_color": "#0b0b0b",
   "theme_color": "#0b0b0b",
