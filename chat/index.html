@@ -51,30 +51,13 @@
       padding: 15px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       z-index: 100;
     }
     #chatTitle { flex: 1; min-width: 0; }
     #chatTitle h1 { font-size: 18px; font-weight: 600; }
     #chatTitle p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
-
-    /* red notif hint */
-    #notifHint {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 35, 35, 0.95);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.35);
-    }
-    #notifHint.show { display: inline-flex; }
-    #notifHint .arrow { font-weight: 900; opacity: 0.95; }
 
     /* bell */
     #pushBtn {
@@ -581,9 +564,6 @@
         <h1>Lil's Life Chat</h1>
         <p>Chat ao vivo</p>
       </div>
-
-      <div id="notifHint"><span>Clique para ativar notificações</span> <span class="arrow">→</span></div>
-
       <button id="pushBtn" title="Ativar notificações" onclick="enableNotifications()">🔔</button>
     </div>
 
@@ -659,8 +639,6 @@
     // Scroll button logic
     const SCROLL_BOTTOM_THRESHOLD_PX = 220; // when farther than this from bottom -> show btn
 
-    const NOTIF_HINT_KEY = "notifHintDismissed";
-
     const colors = [
       '#FF6B6B', '#E74C3C', '#C0392B', '#E74292', '#FF1744',
       '#D32F2F', '#C2185B', '#AD1457', '#880E4F', '#F06292',
@@ -729,19 +707,6 @@
       showScrollBtn(false);
     }
 
-    function hideNotifHintForever() {
-      localStorage.setItem(NOTIF_HINT_KEY, "1");
-      document.getElementById('notifHint').classList.remove('show');
-    }
-
-    function refreshNotifHintVisibility() {
-      const dismissed = localStorage.getItem(NOTIF_HINT_KEY) === "1";
-      // If already granted, don't show the hint either.
-      const alreadyGranted = ("Notification" in window) && Notification.permission === "granted";
-      const shouldShow = !dismissed && !alreadyGranted;
-      document.getElementById('notifHint').classList.toggle('show', shouldShow);
-    }
-
     // ========= AUTH BOOTSTRAP =========
     async function ensureAnonAuth() {
       if (auth.currentUser) return auth.currentUser;
@@ -792,9 +757,6 @@
       }
 
       document.getElementById('bootOverlay').classList.add('hidden');
-
-      // now that UI exists, show/hide notif hint
-      refreshNotifHintVisibility();
     }
 
     boot().catch((e) => {
@@ -842,7 +804,6 @@
       database.ref('activeUsers/' + userId).onDisconnect().remove();
 
       showChat();
-      refreshNotifHintVisibility();
     }
 
     function showChat() {
@@ -874,8 +835,8 @@
       newestTs = 0;
 
       container.addEventListener('scroll', () => {
-        // Infinite older load (more forgiving than == 0)
-        if (container.scrollTop <= 10) {
+        // Infinite older load
+        if (container.scrollTop <= 0) {
           loadOlderMessages();
         }
 
@@ -913,12 +874,14 @@
 
         if ((msg.timestamp || 0) > newestTs) newestTs = msg.timestamp || newestTs;
 
-        // Append but DO NOT autoscroll (unless user is near bottom already)
+        // Append but DO NOT autoscroll (unless user is at bottom already)
         const container = document.getElementById('messagesContainer');
         const wasNearBottom = distanceFromBottom(container) <= SCROLL_BOTTOM_THRESHOLD_PX;
 
         appendMessage(msg, false);
 
+        // If user is already basically at bottom, keep it at bottom.
+        // If user is reading older stuff, keep position and show button.
         if (wasNearBottom) {
           container.scrollTop = container.scrollHeight;
           showScrollBtn(false);
@@ -1358,9 +1321,6 @@
 
     // ========= PUSH =========
     async function enableNotifications() {
-      // per your request: clicking bell once hides warning forever
-      hideNotifHintForever();
-
       if (!authReady || !userId) {
         alert("Auth ainda não carregou.");
         return;
@@ -1398,11 +1358,6 @@
 
     messaging.onMessage((payload) => {
       // optional: in-app toast
-    });
-
-    // Keep hint updated if permission changes while open
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refreshNotifHintVisibility();
     });
   </script>
 </body>
