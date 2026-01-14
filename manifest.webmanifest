@@ -1,6 +1,7 @@
 {
+  "id": "/chat/",
   "name": "LilsChat",
-  "short_name": "Chat",
+  "short_name": "Lil's Chat",
   "start_url": "/chat/",
   "scope": "/",
   "display": "standalone",
