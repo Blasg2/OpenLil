@@ -77,6 +77,36 @@
         .cover-image:hover {
             transform: scale(1.02);
         }
+
+
+        
+    #installBtn {
+    display: none;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 15px;
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    }
+    
+    #installBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+    }
+
+    /* Show only on mobile */
+    @media (min-width: 901px) {
+        #installBtn {
+            display: none !important;
+        }
+    }
         
         p {
             color: #666;
@@ -1130,6 +1160,11 @@
         
         <div class="container">
             <h2 style="display: none;">Lil's Life Launch</h2>
+
+  <!-- Install PWA button -->
+  <button id="installBtn" style="display:none;">
+    Instalar App do Chat.
+  </button>
             
             <!-- MOBILE CHAT PREVIEW -->
             <div id="chatPreview">
@@ -1172,10 +1207,7 @@
             <img src="images/cover11.png" alt="capa" class="cover-image" onclick="openLightbox('images/cover11.png')">
 
 
-  <!-- Install PWA button -->
-  <button id="installBtn" style="display:none;">
-    Install Chat App
-  </button>
+
             
             <!-- MINIGAME BUTTON -->
             <button id="minigameBtn" onclick="startMinigame()">Minigame para fixar o botão de Download</button>
@@ -2360,9 +2392,7 @@ function updateChatPreview() {
 
 
 
-
-    
-    
+<!-- chat gpt for PWA  -->
     <script>
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
@@ -2370,6 +2400,7 @@ function updateChatPreview() {
     });
   }
 </script>
+<!-- chat gpt for PWA  BUTTON DOWNLOAD APP -->
 
 <script>
   let deferredPrompt = null;
@@ -2391,6 +2422,7 @@ function updateChatPreview() {
     
 </body>
 </html>
+
 
 
 
