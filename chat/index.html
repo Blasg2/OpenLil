@@ -23,7 +23,7 @@
 
     body.modal-open { overflow: hidden; }
 
-    /* Hard-disable selection while long-pressing (helps kill Android copy/share popup) */
+    /* While holding, we disable selection globally (helps reduce Android long-press menus) */
     body.no-select, body.no-select * {
       -webkit-user-select: none !important;
       user-select: none !important;
@@ -111,12 +111,12 @@
       word-wrap: break-word;
       position: relative;
 
-      /* prevent selection/callout */
+      /* selection/callout */
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
 
-      /* allow vertical scroll to start even if touch begins on message */
+      /* allow vertical scroll even if touch starts on message */
       touch-action: pan-y;
     }
     .message-bubble * {
@@ -125,7 +125,7 @@
       -webkit-touch-callout: none;
     }
 
-    /* Highlight whole bubble for 4s (not just border) */
+    /* Highlight whole bubble for 4s */
     .message-bubble.highlight { animation: highlightWhole 4s ease; }
     @keyframes highlightWhole {
       0%   { background: #1f1f1f; box-shadow: 0 0 0 rgba(102,126,234,0); }
@@ -137,32 +137,17 @@
     .message-nickname { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
     .message-text { color: #e8e8e8; font-size: 15px; line-height: 1.4; }
 
-    /* Image + watermark badge */
-    .image-wrap {
-      position: relative;
-      display: inline-block;
-      margin-top: 5px;
+    .message-image {
       max-width: 250px;
       width: 100%;
-    }
-    .message-image {
-      width: 100%;
       border-radius: 8px;
+      margin-top: 5px;
       cursor: pointer;
       display: block;
-    }
-    .image-watermark {
-      position: absolute;
-      right: 6px;
-      bottom: 6px;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      font-size: 12px;
-      padding: 4px 6px;
-      border-radius: 10px;
-      line-height: 1;
-      user-select: none;
-      pointer-events: none;
+
+      /* reduce long-press image menus */
+      -webkit-user-drag: none;
+      user-drag: none;
     }
 
     .message-time {
@@ -205,6 +190,10 @@
       flex-shrink: 0;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.05);
+
+      /* reduce long-press image menus */
+      -webkit-user-drag: none;
+      user-drag: none;
     }
 
     .reply-preview .reply-snippet {
@@ -431,6 +420,10 @@
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.05);
       display: none;
+
+      /* reduce long-press image menus */
+      -webkit-user-drag: none;
+      user-drag: none;
     }
     .msg-action-text {
       color: #cfcfcf;
@@ -559,7 +552,6 @@
 
     // Reply state
     let replyTarget = null; // { id, nickname, color, text, imageUrl? }
-
     // Action sheet state
     let actionTarget = null;
 
@@ -583,6 +575,15 @@
       '#673AB7', '#5E35B1', '#512DA8', '#4527A0', '#311B92'
     ];
 
+    // GLOBAL: block native long-press context menus for message bubbles (Chrome/Samsung Internet)
+    // This is the main fix for "Baixar/Compartilhar/Imprimir".
+    document.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('.message-bubble') || e.target.closest('.reply-preview') || e.target.closest('.msg-action-sheet')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, { capture: true });
+
     // Check saved session
     const savedNickname = sessionStorage.getItem('chatNickname');
     const savedColor = sessionStorage.getItem('chatColor');
@@ -600,7 +601,7 @@
 
     function snippetFromMsg(msg) {
       if (!msg) return '';
-      if (msg.imageUrl) return ''; // thumb used for images
+      if (msg.imageUrl) return '';
       if (msg.message) return msg.message.replace(/\s+/g, ' ').trim();
       return '';
     }
@@ -693,15 +694,13 @@
 
     function scrollToMessage(messageId) {
       if (!messageId) return;
-
       const el = document.getElementById(`msg-${messageId}`);
       if (!el) return;
 
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-      // highlight full bubble for 4s
       el.classList.remove('highlight');
-      void el.offsetWidth; // reflow to retrigger animation
+      void el.offsetWidth;
       el.classList.add('highlight');
     }
 
@@ -713,18 +712,14 @@
 
       let content = '';
       if (msg.imageUrl) {
-        // photo with watermark badge at bottom-right
-        content = `
-          <div class="image-wrap">
-            <img src="${escapeHtml(msg.imageUrl)}" class="message-image" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">
-            <div class="image-watermark">📷</div>
-          </div>
-        `;
+        content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" draggable="false" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
       } else if (msg.message) {
         if (msg.transformedIndices?.length) {
           const words = msg.message.split(' ');
-          content = words.map((w, i) => msg.transformedIndices.includes(i) ?
-            `<span style="color:red;font-weight:bold">${escapeHtml(w)}</span>` : escapeHtml(w)).join(' ');
+          content = words.map((w, i) => msg.transformedIndices.includes(i)
+            ? `<span style="color:red;font-weight:bold">${escapeHtml(w)}</span>`
+            : escapeHtml(w)
+          ).join(' ');
         } else {
           content = escapeHtml(msg.message);
         }
@@ -743,7 +738,7 @@
           <div class="reply-preview" onclick="scrollToMessage('${rId}')">
             <div class="reply-name" style="color:${rColor}">${rName}</div>
             <div class="reply-preview-row">
-              ${rImg ? `<img class="reply-thumb" src="${rImg}" alt="thumb">` : ``}
+              ${rImg ? `<img class="reply-thumb" draggable="false" src="${rImg}" alt="thumb">` : ``}
               <div class="reply-snippet">${rImg ? 'Imagem' : rText}</div>
             </div>
           </div>
@@ -754,6 +749,7 @@
 
       div.innerHTML = `
         <div class="message-bubble"
+             oncontextmenu="return false"
              id="msg-${escapeHtml(msg.id)}"
              data-id="${escapeHtml(msg.id)}"
              data-nickname="${escapeHtml(msg.nickname)}"
@@ -958,24 +954,28 @@
       let startX = 0, startY = 0;
       let longPressFired = false;
 
-      // Stop desktop context menu
-      bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
+      // Extra: prevent contextmenu on this element + children (capture)
+      bubbleEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, { capture: true });
 
-      // Stop some Android selection cases
-      bubbleEl.addEventListener('selectstart', (e) => e.preventDefault());
+      bubbleEl.addEventListener('selectstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, { capture: true });
 
       const start = (clientX, clientY) => {
         startX = clientX;
         startY = clientY;
         longPressFired = false;
 
-        // While holding, disable selection globally (reduces Android copy/share popup)
         document.body.classList.add('no-select');
 
         pressTimer = setTimeout(() => {
           longPressFired = true;
 
-          // Clear selection that may have started
+          // clear selection right before opening modal
           try { window.getSelection()?.removeAllRanges?.(); } catch {}
 
           openMsgActionsFromBubble(bubbleEl);
@@ -988,7 +988,7 @@
         document.body.classList.remove('no-select');
       };
 
-      // Keep passive so scroll + clicks still work
+      // Passive true so scrolling still works
       bubbleEl.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
         const t = e.touches[0];
@@ -1000,23 +1000,17 @@
         const t = e.touches[0];
         const dx = Math.abs(t.clientX - startX);
         const dy = Math.abs(t.clientY - startY);
-
-        // user is scrolling -> cancel long press
         if (dx > 10 || dy > 10) cancel();
       }, { passive: true });
 
       bubbleEl.addEventListener('touchend', () => {
-        // If the long-press fired, selection popup might still try to appear on release:
-        // clear selection again + remove no-select
         if (longPressFired) {
           try { window.getSelection()?.removeAllRanges?.(); } catch {}
         }
         cancel();
       }, { passive: true });
 
-      bubbleEl.addEventListener('touchcancel', () => {
-        cancel();
-      }, { passive: true });
+      bubbleEl.addEventListener('touchcancel', cancel, { passive: true });
     }
 
     function openMsgActionsFromBubble(bubbleEl) {
