@@ -506,7 +506,7 @@
     <div id="chatHeader">
       <div id="chatTitle">
         <h1>Lil's Life Chat</h1>
-        <p>Chat ao vivo</p>
+        <p id="uidLabel">Chat ao vivo</p>
       </div>
 
       <!-- notifications button -->
@@ -669,6 +669,9 @@
       userId = user.uid;
 
       console.log("MY UID:", userId);
+      document.getElementById("uidLabel").textContent =
+  "UID: " + userId.slice(0, 6) + "…";
+
 
       authReady = true;
 
