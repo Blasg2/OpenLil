@@ -1,4 +1,4 @@
-/* chat/firebase-messaging-sw.js */
+/* /chat/firebase-messaging-sw.js */
 importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js");
 
@@ -14,11 +14,7 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-/**
- * Android grouping/replacing:
- * - Use a CONSTANT `tag` so new notifications replace the previous one.
- * - Use renotify:false so it won’t vibrate/sound when replacing.
- */
+// Background push display
 messaging.onBackgroundMessage((payload) => {
   const title =
     payload?.notification?.title ||
@@ -30,44 +26,20 @@ messaging.onBackgroundMessage((payload) => {
     payload?.data?.body ||
     "Nova mensagem";
 
-  const messageId = payload?.data?.messageId || "";
-  const senderUid = payload?.data?.senderUid || "";
-
-  const options = {
+  self.registration.showNotification(title, {
     body,
-    icon: "/images/icon192.png",
-    badge: "/images/icon192.png",
-
-    // KEY: replace instead of stacking
-    tag: "lils-life-chat",
-
-    // KEY: replacing should not vibrate/sound again
-    renotify: false,
-    silent: true,
-
-    data: {
-      url: "/chat/",
-      messageId,
-      senderUid
-    }
-  };
-
-  self.registration.showNotification(title, options);
+    icon: "/images/icon-192.png", // adjust if your icon path differs
+    data: payload?.data || {}
+  });
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification?.data?.url || "/chat/";
-  event.waitUntil(
-    (async () => {
-      const allClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
-      for (const c of allClients) {
-        if (c.url.includes("/chat")) {
-          await c.focus();
-          return;
-        }
-      }
-      await clients.openWindow(url);
-    })()
-  );
+  event.waitUntil((async () => {
+    const allClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const c of allClients) {
+      if (c.url.includes("/chat")) return c.focus();
+    }
+    return clients.openWindow("/chat");
+  })());
 });
