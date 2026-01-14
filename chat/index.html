@@ -117,7 +117,7 @@
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
-      touch-action: manipulation;
+      touch-action: pan-y;
     }
     .message-bubble * {
       -webkit-user-select: none;
@@ -927,53 +927,70 @@
     });
     /* ====================================================== */
 
-    /* ========= WHATSAPP-LIKE REPLY SYSTEM ========= */
-    function attachLongPressForReply(bubbleEl) {
-      let pressTimer = null;
-      let startX = 0, startY = 0;
+  /* ========= WHATSAPP-LIKE REPLY SYSTEM ========= */
+function attachLongPressForReply(bubbleEl) {
+  let pressTimer = null;
+  let startX = 0, startY = 0;
+  let longPressFired = false;
 
-      // prevent Android selection bar
-      bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
-      bubbleEl.addEventListener('selectstart', (e) => e.preventDefault());
+  // Prevent desktop context menu
+  bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
-      const start = (clientX, clientY) => {
-        startX = clientX; startY = clientY;
+  // Prevent selection start (helps on some Androids)
+  bubbleEl.addEventListener('selectstart', (e) => e.preventDefault());
 
-        pressTimer = setTimeout(() => {
-          openMsgActionsFromBubble(bubbleEl);
-        }, 450);
-      };
+  const start = (clientX, clientY) => {
+    startX = clientX;
+    startY = clientY;
+    longPressFired = false;
 
-      const cancel = () => {
-        if (pressTimer) clearTimeout(pressTimer);
-        pressTimer = null;
-      };
+    pressTimer = setTimeout(() => {
+      longPressFired = true;
 
-      // IMPORTANT: passive false so we can preventDefault() and kill selection popup
-      bubbleEl.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1) return;
-        e.preventDefault();
-        const t = e.touches[0];
-        start(t.clientX, t.clientY);
-      }, { passive: false });
+      // Clear any text selection (kills the "Copy/Share" bar on many devices)
+      try { window.getSelection()?.removeAllRanges?.(); } catch {}
 
-      bubbleEl.addEventListener('touchmove', (e) => {
-        if (!pressTimer) return;
-        const t = e.touches[0];
-        const dx = Math.abs(t.clientX - startX);
-        const dy = Math.abs(t.clientY - startY);
-        if (dx > 10 || dy > 10) cancel();
-      }, { passive: true });
+      openMsgActionsFromBubble(bubbleEl);
+    }, 450);
+  };
 
-      bubbleEl.addEventListener('touchend', cancel, { passive: true });
-      bubbleEl.addEventListener('touchcancel', cancel, { passive: true });
+  const cancel = () => {
+    if (pressTimer) clearTimeout(pressTimer);
+    pressTimer = null;
+  };
 
-      // Desktop fallback: right click
-      bubbleEl.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        openMsgActionsFromBubble(bubbleEl);
-      });
+  // IMPORTANT: keep this passive so scrolling + tapping still work
+  bubbleEl.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    start(t.clientX, t.clientY);
+  }, { passive: true });
+
+  bubbleEl.addEventListener('touchmove', (e) => {
+    if (!pressTimer) return;
+    const t = e.touches[0];
+    const dx = Math.abs(t.clientX - startX);
+    const dy = Math.abs(t.clientY - startY);
+
+    // if user is scrolling, cancel long-press
+    if (dx > 10 || dy > 10) cancel();
+  }, { passive: true });
+
+  bubbleEl.addEventListener('touchend', (e) => {
+    // If long-press fired, prevent the "tap/click" from doing anything weird
+    // (usually not necessary, but safe)
+    if (longPressFired) {
+      // Do NOT preventDefault() here; just let it end normally.
+      // The modal is already open.
     }
+    cancel();
+  }, { passive: true });
+
+  bubbleEl.addEventListener('touchcancel', () => {
+    cancel();
+  }, { passive: true });
+}
+
 
     function openMsgActionsFromBubble(bubbleEl) {
       actionTarget = buildReplyTargetFromBubble(bubbleEl);
@@ -1084,3 +1101,4 @@
   </script>
 </body>
 </html>
+
