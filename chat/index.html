@@ -1,715 +1,936 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="/manifest.webmanifest">
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Lil's Life Chat</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Lil's Life Chat</title>
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #0a0a0a;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-        }
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        /* HEADER */
-        #chatHeader {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0a0a0a;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-        #chatTitle {
-            flex: 1;
-        }
+    body.modal-open { overflow: hidden; }
 
-        #chatTitle h1 {
-            font-size: 18px;
-            font-weight: 600;
-        }
+    /* HEADER */
+    #chatHeader {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      z-index: 100;
+    }
+    #chatTitle { flex: 1; }
+    #chatTitle h1 { font-size: 18px; font-weight: 600; }
+    #chatTitle p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
 
-        #chatTitle p {
-            font-size: 12px;
-            opacity: 0.9;
-            margin-top: 2px;
-        }
+    /* NICKNAME SETUP */
+    #nicknameScreen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    #nicknameScreen.hidden { display: none; }
 
-        /* NICKNAME SETUP */
-        #nicknameScreen {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
+    .nickname-card {
+      background: white;
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+    .nickname-card h2 { color: #333; margin-bottom: 10px; font-size: 24px; }
+    .nickname-card p { color: #666; margin-bottom: 25px; font-size: 14px; }
 
-        #nicknameScreen.hidden {
-            display: none;
-        }
+    #nicknameInput {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      outline: none;
+    }
+    #nicknameInput:focus { border-color: #764ba2; }
 
-        .nickname-card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            width: 100%;
-            max-width: 400px;
-        }
+    #enterChatBtn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-        .nickname-card h2 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 24px;
-        }
+    /* MESSAGES AREA */
+    #messagesContainer {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column-reverse;
+    }
+    .message { margin-bottom: 12px; animation: slideIn 0.2s ease; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .nickname-card p {
-            color: #666;
-            margin-bottom: 25px;
-            font-size: 14px;
-        }
+    .message-bubble {
+      background: #1f1f1f;
+      padding: 10px 12px;
+      border-radius: 12px;
+      max-width: 80%;
+      word-wrap: break-word;
+      position: relative;
+      user-select: none;
+    }
 
-        #nicknameInput {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #667eea;
-            border-radius: 12px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            outline: none;
-        }
+    .message-nickname { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
+    .message-text { color: #e8e8e8; font-size: 15px; line-height: 1.4; }
 
-        #nicknameInput:focus {
-            border-color: #764ba2;
-        }
+    .message-image {
+      max-width: 250px;
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 5px;
+      cursor: pointer;
+    }
 
-        #enterChatBtn {
-            width: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    .message-time {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+      text-align: right;
+    }
 
-        /* MESSAGES AREA */
-        #messagesContainer {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #0a0a0a;
-            display: flex;
-            flex-direction: column-reverse;
-        }
+    /* Reply preview shown inside a message */
+    .reply-preview {
+      background: rgba(255,255,255,0.06);
+      border-left: 3px solid #667eea;
+      padding: 8px 10px;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .reply-preview .reply-name {
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.95;
+      margin-bottom: 2px;
+    }
+    .reply-preview .reply-snippet {
+      font-size: 13px;
+      opacity: 0.9;
+      color: #ddd;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
 
-        .message {
-            margin-bottom: 12px;
-            animation: slideIn 0.2s ease;
-        }
+    /* INPUT AREA */
+    #inputArea {
+      background: #1a1a1a;
+      padding: 10px;
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      border-top: 1px solid #2a2a2a;
+    }
 
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    #imageBtn, #sendBtn {
+      background: #667eea;
+      border: none;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
 
-        .message-bubble {
-            background: #1f1f1f;
-            padding: 10px 12px;
-            border-radius: 12px;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
+    #messageInput {
+      flex: 1;
+      background: #2a2a2a;
+      border: none;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 22px;
+      font-size: 16px;
+      outline: none;
+      max-height: 100px;
+      resize: none;
+    }
 
-        .message-nickname {
-            font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
+    #uploadStatus {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #667eea;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 1000;
+      display: none;
+    }
 
-        .message-text {
-            color: #e8e8e8;
-            font-size: 15px;
-            line-height: 1.4;
-        }
+    /* Reply bar above input */
+    #replyBar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #141414;
+      border-top: 1px solid #2a2a2a;
+    }
+    #replyBar.active { display: flex; }
 
-        .message-image {
-            max-width: 250px;
-            width: 100%;
-            border-radius: 8px;
-            margin-top: 5px;
-            cursor: pointer;
-        }
+    #replyBarLeft {
+      flex: 1;
+      border-left: 3px solid #667eea;
+      padding-left: 10px;
+      overflow: hidden;
+    }
+    #replyBarTitle {
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0.95;
+      margin-bottom: 2px;
+    }
+    #replyBarText {
+      color: #bbb;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #replyCancelBtn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: #2a2a2a;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
 
-        .message-time {
-            font-size: 11px;
-            color: #888;
-            margin-top: 4px;
-            text-align: right;
-        }
+    /* IMAGE LIGHTBOX */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    #lightbox.active { display: flex; }
+    #lightbox img { max-width: 100%; max-height: 100%; border-radius: 10px; }
+    #closeLightbox {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+    }
 
-        /* INPUT AREA */
-        #inputArea {
-            background: #1a1a1a;
-            padding: 10px;
-            display: flex;
-            gap: 8px;
-            align-items: flex-end;
-            border-top: 1px solid #2a2a2a;
-        }
+    #chatScreen { display: none; flex-direction: column; height: 100vh; }
+    #chatScreen.active { display: flex; }
 
-        #imageBtn {
-            background: #667eea;
-            border: none;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
+    /* ========= IMAGE SOURCE MODAL ========= */
+    #imageSourceModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    #imageSourceModal.active { display: flex; }
 
-        #messageInput {
-            flex: 1;
-            background: #2a2a2a;
-            border: none;
-            color: white;
-            padding: 12px 15px;
-            border-radius: 22px;
-            font-size: 16px;
-            outline: none;
-            max-height: 100px;
-            resize: none;
-        }
+    .image-source-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      width: 100%;
+      max-width: 360px;
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    .image-source-card h3 { color: white; font-size: 16px; margin-bottom: 12px; opacity: 0.95; }
 
-        #sendBtn {
-            background: #667eea;
-            border: none;
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
+    .image-source-card button {
+      width: 100%;
+      border: none;
+      padding: 14px 14px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .image-source-card .primary { background: #667eea; color: white; }
+    .image-source-card .secondary { background: #2a2a2a; color: white; }
+    .image-source-card .cancel { background: transparent; color: #aaa; }
+    /* ===================================== */
 
-        #imageFileInput {
-            display: none;
-        }
+    /* ========= MESSAGE ACTION POPUP (Reply) ========= */
+    #msgActionModal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      display: none;
+      z-index: 10001;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+    }
+    #msgActionModal.active { display: flex; }
 
-        #uploadStatus {
-            position: fixed;
-            top: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #667eea;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 14px;
-            z-index: 1000;
-            display: none;
-        }
+    .msg-action-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 18px;
+      padding: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
 
-        /* IMAGE LIGHTBOX */
-        #lightbox {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.95);
-            z-index: 9999;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+    .msg-action-preview {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      margin-bottom: 10px;
+    }
+    .msg-action-preview .p1 { color: white; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .msg-action-preview .p2 { color: #cfcfcf; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        #lightbox.active {
-            display: flex;
-        }
-
-        #lightbox img {
-            max-width: 100%;
-            max-height: 100%;
-            border-radius: 10px;
-        }
-
-        #closeLightbox {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ff4444;
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-        }
-
-        #chatScreen {
-            display: none;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        #chatScreen.active {
-            display: flex;
-        }
-
-        /* ========= IMAGE SOURCE MODAL (NEW) ========= */
-        #imageSourceModal {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            padding: 20px;
-        }
-
-        #imageSourceModal.active {
-            display: flex;
-        }
-
-        .image-source-card {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            width: 100%;
-            max-width: 360px;
-            border-radius: 18px;
-            padding: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-
-        .image-source-card h3 {
-            color: white;
-            font-size: 16px;
-            margin-bottom: 12px;
-            opacity: 0.95;
-        }
-
-        .image-source-card button {
-            width: 100%;
-            border: none;
-            padding: 14px 14px;
-            border-radius: 14px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .image-source-card .primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .image-source-card .secondary {
-            background: #2a2a2a;
-            color: white;
-        }
-
-        .image-source-card .cancel {
-            background: transparent;
-            color: #aaa;
-        }
-        /* =========================================== */
-    </style>
+    .msg-action-sheet button {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .msg-action-sheet .reply { background: #667eea; color: white; }
+    .msg-action-sheet .cancel { background: transparent; color: #aaa; }
+    /* =============================================== */
+  </style>
 </head>
+
 <body>
-    <!-- LIGHTBOX -->
-    <div id="lightbox" onclick="closeLightbox()">
-        <button id="closeLightbox">×</button>
-        <img id="lightboxImage" src="" alt="Full size" onclick="event.stopPropagation()">
+  <!-- LIGHTBOX -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <button id="closeLightbox">×</button>
+    <img id="lightboxImage" src="" alt="Full size" onclick="event.stopPropagation()">
+  </div>
+
+  <!-- IMAGE SOURCE MODAL -->
+  <div id="imageSourceModal" onclick="closeImageSource()">
+    <div class="image-source-card" onclick="event.stopPropagation()">
+      <h3>Enviar imagem</h3>
+      <button class="primary" onclick="openCamera()">📷 Câmera</button>
+      <button class="secondary" onclick="openGallery()">🖼️ Galeria</button>
+      <button class="cancel" onclick="closeImageSource()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Hidden inputs -->
+  <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none"
+         onchange="handleImageSelect(event)">
+  <input type="file" id="galleryInput" accept="image/*" style="display:none"
+         onchange="handleImageSelect(event)">
+
+  <!-- Message action popup (reply) -->
+  <div id="msgActionModal" onclick="closeMsgActions()">
+    <div class="msg-action-sheet" onclick="event.stopPropagation()">
+      <div class="msg-action-preview">
+        <div class="p1" id="msgActionName">Usuário</div>
+        <div class="p2" id="msgActionText">Mensagem…</div>
+      </div>
+      <button class="reply" onclick="startReplyFromAction()">Responder</button>
+      <button class="cancel" onclick="closeMsgActions()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NICKNAME SCREEN -->
+  <div id="nicknameScreen">
+    <div class="nickname-card">
+      <h2>Bem-vindo!</h2>
+      <p>Escolha um apelido para entrar no chat</p>
+      <input type="text" id="nicknameInput" placeholder="Seu apelido..." maxlength="20">
+      <button id="enterChatBtn" onclick="enterChat()">Entrar no Chat</button>
+    </div>
+  </div>
+
+  <!-- CHAT SCREEN -->
+  <div id="chatScreen">
+    <div id="chatHeader">
+      <div id="chatTitle">
+        <h1>Lil's Life Chat</h1>
+        <p>Chat ao vivo</p>
+      </div>
     </div>
 
-    <!-- ========= IMAGE SOURCE MODAL (NEW) ========= -->
-    <div id="imageSourceModal" onclick="closeImageSource()">
-        <div class="image-source-card" onclick="event.stopPropagation()">
-            <h3>Enviar imagem</h3>
-            <button class="primary" onclick="openCamera()">📷 Câmera</button>
-            <button class="secondary" onclick="openGallery()">🖼️ Galeria</button>
-            <button class="cancel" onclick="closeImageSource()">Cancelar</button>
-        </div>
+    <div id="uploadStatus"></div>
+
+    <div id="messagesContainer"></div>
+
+    <!-- Reply bar (WhatsApp style) -->
+    <div id="replyBar">
+      <div id="replyBarLeft">
+        <div id="replyBarTitle">Respondendo</div>
+        <div id="replyBarText">…</div>
+      </div>
+      <button id="replyCancelBtn" onclick="cancelReply()">×</button>
     </div>
 
-    <!-- Hidden inputs (NEW) -->
-    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none"
-           onchange="handleImageSelect(event)">
-    <input type="file" id="galleryInput" accept="image/*" style="display:none"
-           onchange="handleImageSelect(event)">
-    <!-- =========================================== -->
-
-    <!-- NICKNAME SCREEN -->
-    <div id="nicknameScreen">
-        <div class="nickname-card">
-            <h2>Bem-vindo!</h2>
-            <p>Escolha um apelido para entrar no chat</p>
-            <input type="text" id="nicknameInput" placeholder="Seu apelido..." maxlength="20">
-            <button id="enterChatBtn" onclick="enterChat()">Entrar no Chat</button>
-        </div>
+    <div id="inputArea">
+      <button id="imageBtn" onclick="openImageSource()">📷</button>
+      <textarea id="messageInput" placeholder="Mensagem..." rows="1"></textarea>
+      <button id="sendBtn" onclick="sendMessage()">➤</button>
     </div>
+  </div>
 
-    <!-- CHAT SCREEN -->
-    <div id="chatScreen">
-        <div id="chatHeader">
-            <div id="chatTitle">
-                <h1>Lil's Life Chat</h1>
-                <p>Chat ao vivo</p>
-            </div>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAzpUnWhMkePhLgwf22aA8YUzrUJUc_RlE",
+      authDomain: "lilslife.firebaseapp.com",
+      databaseURL: "https://lilslife-default-rtdb.firebaseio.com",
+      projectId: "lilslife",
+      storageBucket: "lilslife.firebasestorage.app",
+      messagingSenderId: "731094352991",
+      appId: "1:731094352991:web:6ac2b5b02253f4915947ea"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const messagesRef = database.ref('messages');
+    const IMGBB_API_KEY = '18ab4a20c315acaf53a635943d332eba';
+
+    let userNickname = null;
+    let userColor = null;
+    let userId = 'user_' + Math.random().toString(36).substr(2, 9);
+
+    // Reply state (NEW)
+    let replyTarget = null; // { id, nickname, text, isImage }
+
+    // Action sheet state (NEW)
+    let actionTarget = null; // same shape as replyTarget
+
+    const colors = [
+      '#FF6B6B', '#E74C3C', '#C0392B', '#E74292', '#FF1744',
+      '#D32F2F', '#C2185B', '#AD1457', '#880E4F', '#F06292',
+      '#EC407A', '#E91E63', '#FF4081', '#F50057', '#C51162',
+      '#FF9800', '#F57C00', '#E65100', '#FF6F00', '#FF5722',
+      '#E64A19', '#D84315', '#BF360C', '#FFA726', '#FB8C00',
+      '#FFD54F', '#FFC107', '#FFB300', '#FFA000', '#FF8F00',
+      '#F9A825', '#F57F17', '#FFD600', '#FFEA00', '#F4B400',
+      '#4CAF50', '#388E3C', '#2E7D32', '#1B5E20', '#00C853',
+      '#00E676', '#69F0AE', '#00BFA5', '#1DE9B6', '#00897B',
+      '#00695C', '#004D40', '#66BB6A', '#43A047', '#2E7D32',
+      '#81C784', '#66BB6A', '#4CAF50', '#8BC34A', '#9CCC65',
+      '#7CB342', '#689F38', '#558B2F', '#33691E', '#C5E1A5',
+      '#00BCD4', '#00ACC1', '#0097A7', '#00838F', '#006064',
+      '#26C6DA', '#00B8D4', '#00E5FF', '#84FFFF', '#18FFFF',
+      '#2196F3', '#1E88E5', '#1976D2', '#1565C0', '#0D47A1',
+      '#9C27B0', '#8E24AA', '#7B1FA2', '#6A1B9A', '#4A148C',
+      '#673AB7', '#5E35B1', '#512DA8', '#4527A0', '#311B92'
+    ];
+
+    // Check saved session
+    const savedNickname = sessionStorage.getItem('chatNickname');
+    const savedColor = sessionStorage.getItem('chatColor');
+    if (savedNickname && savedColor) {
+      userNickname = savedNickname;
+      userColor = savedColor;
+      showChat();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text ?? '';
+      return div.innerHTML;
+    }
+
+    function snippetFromMsg(msg) {
+      if (!msg) return '';
+      if (msg.imageUrl) return '📷 Imagem';
+      if (msg.message) return msg.message.replace(/\s+/g, ' ').trim();
+      return '';
+    }
+
+    async function enterChat() {
+      const input = document.getElementById('nicknameInput');
+      const nickname = input.value.trim();
+
+      if (nickname.length < 2) {
+        alert('Apelido deve ter pelo menos 2 caracteres!');
+        return;
+      }
+
+      userNickname = nickname;
+
+      const snapshot = await database.ref('activeUsers').once('value');
+      const activeUsers = snapshot.val() || {};
+      const usedColors = Object.values(activeUsers).map(u => u.color);
+
+      let availableColors = colors.filter(c => !usedColors.includes(c));
+      if (availableColors.length === 0) availableColors = colors;
+
+      userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+
+      sessionStorage.setItem('chatNickname', userNickname);
+      sessionStorage.setItem('chatColor', userColor);
+
+      await database.ref('activeUsers/' + userId).set({
+        nickname: userNickname,
+        color: userColor,
+        timestamp: Date.now()
+      });
+
+      database.ref('activeUsers/' + userId).onDisconnect().remove();
+
+      showChat();
+    }
+
+    function showChat() {
+      document.getElementById('nicknameScreen').classList.add('hidden');
+      document.getElementById('chatScreen').classList.add('active');
+      loadMessages();
+
+      // Auto-resize textarea
+      const textarea = document.getElementById('messageInput');
+      textarea.addEventListener('input', () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+      });
+
+      // Enter to send (Shift+Enter for new line)
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    }
+
+    function loadMessages() {
+      messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
+        const messages = [];
+        snapshot.forEach((child) => {
+          messages.push({ id: child.key, ...child.val() });
+        });
+        displayMessages(messages);
+      });
+    }
+
+    function displayMessages(messages) {
+      const container = document.getElementById('messagesContainer');
+      container.innerHTML = '';
+
+      messages.reverse().forEach(msg => {
+        const msgEl = createMessageElement(msg);
+        container.appendChild(msgEl);
+      });
+    }
+
+    function createMessageElement(msg) {
+      const div = document.createElement('div');
+      div.className = 'message';
+
+      const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      let content = '';
+      if (msg.imageUrl) {
+        content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
+      } else if (msg.message) {
+        if (msg.transformedIndices?.length) {
+          const words = msg.message.split(' ');
+          content = words.map((w, i) => msg.transformedIndices.includes(i) ?
+            `<span style="color:red;font-weight:bold">${escapeHtml(w)}</span>` : escapeHtml(w)).join(' ');
+        } else {
+          content = escapeHtml(msg.message);
+        }
+      }
+
+      // Reply preview (NEW)
+      let replyHtml = '';
+      if (msg.replyTo && (msg.replyTo.nickname || msg.replyTo.text)) {
+        const rName = escapeHtml(msg.replyTo.nickname || 'Mensagem');
+        const rText = escapeHtml(msg.replyTo.text || '');
+        replyHtml = `
+          <div class="reply-preview">
+            <div class="reply-name" style="color:${escapeHtml(msg.replyTo.color || '#667eea')}">${rName}</div>
+            <div class="reply-snippet">${rText}</div>
+          </div>
+        `;
+      }
+
+      div.innerHTML = `
+        <div class="message-bubble"
+             data-id="${escapeHtml(msg.id)}"
+             data-nickname="${escapeHtml(msg.nickname)}"
+             data-color="${escapeHtml(msg.color)}"
+             data-snippet="${escapeHtml(snippetFromMsg(msg))}">
+          ${replyHtml}
+          <div class="message-nickname" style="color:${escapeHtml(msg.color)}">${escapeHtml(msg.nickname)}</div>
+          <div class="message-text">${content}</div>
+          <div class="message-time">${time}</div>
         </div>
+      `;
 
-        <div id="uploadStatus"></div>
+      // Long press detection (NEW)
+      const bubble = div.querySelector('.message-bubble');
+      attachLongPressForReply(bubble);
 
-        <div id="messagesContainer"></div>
+      return div;
+    }
 
-        <div id="inputArea">
-            <!-- Old input still here but unused; you can delete it if you want -->
-            <input type="file" id="imageFileInput" accept="image/*" onchange="handleImageSelect(event)">
+    function sendMessage() {
+      const input = document.getElementById('messageInput');
+      const message = input.value.trim();
+      if (!message) return;
 
-            <!-- Change button to open modal (NEW) -->
-            <button id="imageBtn" onclick="openImageSource()">📷</button>
+      const words = message.split(' ');
+      const transformedIndices = [];
+      const transformed = words.map((w, i) => {
+        if (w.toLowerCase() === 'lil') return w;
+        if (Math.random() < 0.05) {
+          transformedIndices.push(i);
+          return 'Lil';
+        }
+        return w;
+      }).join(' ');
 
-            <textarea id="messageInput" placeholder="Mensagem..." rows="1"></textarea>
-            <button id="sendBtn" onclick="sendMessage()">➤</button>
-        </div>
-    </div>
+      const payload = {
+        nickname: userNickname,
+        message: transformed,
+        color: userColor,
+        timestamp: Date.now(),
+        transformedIndices: transformedIndices
+      };
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+      // Attach reply info if active (NEW)
+      if (replyTarget) {
+        payload.replyTo = {
+          id: replyTarget.id,
+          nickname: replyTarget.nickname,
+          color: replyTarget.color,
+          text: replyTarget.text
+        };
+      }
 
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAzpUnWhMkePhLgwf22aA8YUzrUJUc_RlE",
-            authDomain: "lilslife.firebaseapp.com",
-            databaseURL: "https://lilslife-default-rtdb.firebaseio.com",
-            projectId: "lilslife",
-            storageBucket: "lilslife.firebasestorage.app",
-            messagingSenderId: "731094352991",
-            appId: "1:731094352991:web:6ac2b5b02253f4915947ea"
+      messagesRef.push(payload);
+
+      input.value = '';
+      input.style.height = 'auto';
+
+      // Scroll to bottom
+      const container = document.getElementById('messagesContainer');
+      container.scrollTop = 0;
+
+      // Keep focus on input
+      input.focus();
+
+      // Clear reply state after sending (NEW)
+      cancelReply();
+    }
+
+    async function handleImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file || !file.type.startsWith('image/')) return;
+
+      const status = document.getElementById('uploadStatus');
+      status.style.display = 'block';
+      status.textContent = 'Enviando...';
+
+      try {
+        const compressed = await compressImage(file, 500 * 1024);
+        const url = await uploadToImgBB(compressed);
+
+        const payload = {
+          nickname: userNickname,
+          imageUrl: url,
+          color: userColor,
+          timestamp: Date.now()
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const messagesRef = database.ref('messages');
-        const IMGBB_API_KEY = '18ab4a20c315acaf53a635943d332eba';
-
-        let userNickname = null;
-        let userColor = null;
-        let userId = 'user_' + Math.random().toString(36).substr(2, 9);
-
-        const colors = [
-            '#FF6B6B', '#E74C3C', '#C0392B', '#E74292', '#FF1744',
-            '#D32F2F', '#C2185B', '#AD1457', '#880E4F', '#F06292',
-            '#EC407A', '#E91E63', '#FF4081', '#F50057', '#C51162',
-            '#FF9800', '#F57C00', '#E65100', '#FF6F00', '#FF5722',
-            '#E64A19', '#D84315', '#BF360C', '#FFA726', '#FB8C00',
-            '#FFD54F', '#FFC107', '#FFB300', '#FFA000', '#FF8F00',
-            '#F9A825', '#F57F17', '#FFD600', '#FFEA00', '#F4B400',
-            '#4CAF50', '#388E3C', '#2E7D32', '#1B5E20', '#00C853',
-            '#00E676', '#69F0AE', '#00BFA5', '#1DE9B6', '#00897B',
-            '#00695C', '#004D40', '#66BB6A', '#43A047', '#2E7D32',
-            '#81C784', '#66BB6A', '#4CAF50', '#8BC34A', '#9CCC65',
-            '#7CB342', '#689F38', '#558B2F', '#33691E', '#C5E1A5',
-            '#00BCD4', '#00ACC1', '#0097A7', '#00838F', '#006064',
-            '#26C6DA', '#00B8D4', '#00E5FF', '#84FFFF', '#18FFFF',
-            '#2196F3', '#1E88E5', '#1976D2', '#1565C0', '#0D47A1',
-            '#9C27B0', '#8E24AA', '#7B1FA2', '#6A1B9A', '#4A148C',
-            '#673AB7', '#5E35B1', '#512DA8', '#4527A0', '#311B92'
-        ];
-
-        // Check saved session
-        const savedNickname = sessionStorage.getItem('chatNickname');
-        const savedColor = sessionStorage.getItem('chatColor');
-        if (savedNickname && savedColor) {
-            userNickname = savedNickname;
-            userColor = savedColor;
-            showChat();
+        // Attach reply info if active (NEW)
+        if (replyTarget) {
+          payload.replyTo = {
+            id: replyTarget.id,
+            nickname: replyTarget.nickname,
+            color: replyTarget.color,
+            text: replyTarget.text
+          };
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+        await messagesRef.push(payload);
 
-        async function enterChat() {
-            const input = document.getElementById('nicknameInput');
-            const nickname = input.value.trim();
-            
-            if (nickname.length < 2) {
-                alert('Apelido deve ter pelo menos 2 caracteres!');
-                return;
-            }
+        status.textContent = 'Enviado!';
+        setTimeout(() => status.style.display = 'none', 2000);
 
-            userNickname = nickname;
-            
-            const snapshot = await database.ref('activeUsers').once('value');
-            const activeUsers = snapshot.val() || {};
-            const usedColors = Object.values(activeUsers).map(u => u.color);
-            
-            let availableColors = colors.filter(c => !usedColors.includes(c));
-            if (availableColors.length === 0) availableColors = colors;
-            
-            userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-            
-            sessionStorage.setItem('chatNickname', userNickname);
-            sessionStorage.setItem('chatColor', userColor);
-            
-            await database.ref('activeUsers/' + userId).set({
-                nickname: userNickname,
-                color: userColor,
-                timestamp: Date.now()
-            });
-            
-            database.ref('activeUsers/' + userId).onDisconnect().remove();
-            
-            showChat();
-        }
+        // Scroll to bottom
+        const container = document.getElementById('messagesContainer');
+        container.scrollTop = 0;
 
-        function showChat() {
-            document.getElementById('nicknameScreen').classList.add('hidden');
-            document.getElementById('chatScreen').classList.add('active');
-            loadMessages();
-            
-            // Auto-resize textarea
-            const textarea = document.getElementById('messageInput');
-            textarea.addEventListener('input', () => {
-                textarea.style.height = 'auto';
-                textarea.style.height = textarea.scrollHeight + 'px';
-            });
-            
-            // Enter to send (Shift+Enter for new line)
-            textarea.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        }
-
-        function loadMessages() {
-            messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
-                const messages = [];
-                snapshot.forEach((child) => {
-                    messages.push({ id: child.key, ...child.val() });
-                });
-                displayMessages(messages);
-            });
-        }
-
-        function displayMessages(messages) {
-            const container = document.getElementById('messagesContainer');
-            container.innerHTML = '';
-            
-            messages.reverse().forEach(msg => {
-                const msgEl = createMessageElement(msg);
-                container.appendChild(msgEl);
-            });
-        }
-
-        function createMessageElement(msg) {
-            const div = document.createElement('div');
-            div.className = 'message';
-            
-            const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            let content = '';
-            if (msg.imageUrl) {
-                content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
-            } else if (msg.message) {
-                if (msg.transformedIndices?.length) {
-                    const words = msg.message.split(' ');
-                    content = words.map((w, i) => msg.transformedIndices.includes(i) ? 
-                        `<span style="color:red;font-weight:bold">${escapeHtml(w)}</span>` : escapeHtml(w)).join(' ');
-                } else {
-                    content = escapeHtml(msg.message);
-                }
-            }
-            
-            div.innerHTML = `
-                <div class="message-bubble">
-                    <div class="message-nickname" style="color:${msg.color}">${escapeHtml(msg.nickname)}</div>
-                    <div class="message-text">${content}</div>
-                    <div class="message-time">${time}</div>
-                </div>
-            `;
-            
-            return div;
-        }
-
-        function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            if (!message) return;
-            
-            const words = message.split(' ');
-            const transformedIndices = [];
-            const transformed = words.map((w, i) => {
-                if (w.toLowerCase() === 'lil') return w;
-                if (Math.random() < 0.05) {
-                    transformedIndices.push(i);
-                    return 'Lil';
-                }
-                return w;
-            }).join(' ');
-            
-            messagesRef.push({
-                nickname: userNickname,
-                message: transformed,
-                color: userColor,
-                timestamp: Date.now(),
-                transformedIndices: transformedIndices
-            });
-            
-            input.value = '';
-            input.style.height = 'auto';
-            
-            // Scroll to bottom
-            const container = document.getElementById('messagesContainer');
-            container.scrollTop = 0;
-            
-            // Keep focus on input (keeps keyboard open)
-            input.focus();
-        }
-
-        async function handleImageSelect(event) {
-            const file = event.target.files[0];
-            if (!file || !file.type.startsWith('image/')) return;
-            
-            const status = document.getElementById('uploadStatus');
-            status.style.display = 'block';
-            status.textContent = 'Enviando...';
-            
-            try {
-                const compressed = await compressImage(file, 500 * 1024);
-                const url = await uploadToImgBB(compressed);
-                
-                await messagesRef.push({
-                    nickname: userNickname,
-                    imageUrl: url,
-                    color: userColor,
-                    timestamp: Date.now()
-                });
-                
-                status.textContent = 'Enviado!';
-                setTimeout(() => status.style.display = 'none', 2000);
-                
-                // Scroll to bottom
-                const container = document.getElementById('messagesContainer');
-                container.scrollTop = 0;
-            } catch (error) {
-                status.textContent = 'Erro no envio';
-                setTimeout(() => status.style.display = 'none', 3000);
-            }
-            
-            event.target.value = '';
-        }
-
-        async function compressImage(file, maxSize) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let w = img.width, h = img.height;
-                        
-                        if (w > 1920 || h > 1920) {
-                            if (w > h) { h = (h/w)*1920; w = 1920; }
-                            else { w = (w/h)*1920; h = 1920; }
-                        }
-                        
-                        canvas.width = w;
-                        canvas.height = h;
-                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                        
-                        let q = 0.9;
-                        const compress = () => canvas.toBlob(b => {
-                            if (b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
-                            else resolve(new File([b], file.name, {type: 'image/jpeg'}));
-                        }, 'image/jpeg', q);
-                        compress();
-                    };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        async function uploadToImgBB(file) {
-            const fd = new FormData();
-            fd.append('image', file);
-            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method: 'POST', body: fd});
-            return (await res.json()).data.url;
-        }
-
-        function openLightbox(url) {
-            document.getElementById('lightboxImage').src = url;
-            document.getElementById('lightbox').classList.add('active');
-        }
-
-        function closeLightbox() {
-            document.getElementById('lightbox').classList.remove('active');
-        }
-
-        /* ========= CAMERA/GALLERY PICKER LOGIC (NEW) ========= */
-        function openImageSource() {
-            document.getElementById('imageSourceModal').classList.add('active');
-        }
-
-        function closeImageSource() {
-            document.getElementById('imageSourceModal').classList.remove('active');
-        }
-
-        function openCamera() {
-            closeImageSource();
-            document.getElementById('cameraInput').click();
-        }
-
-        function openGallery() {
-            closeImageSource();
-            document.getElementById('galleryInput').click();
-        }
-        /* ==================================================== */
-    </script>
-
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js");
-        });
+        // Clear reply state after sending (NEW)
+        cancelReply();
+      } catch (error) {
+        status.textContent = 'Erro no envio';
+        setTimeout(() => status.style.display = 'none', 3000);
       }
-    </script>
+
+      event.target.value = '';
+    }
+
+    async function compressImage(file, maxSize) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let w = img.width, h = img.height;
+
+            if (w > 1920 || h > 1920) {
+              if (w > h) { h = (h/w)*1920; w = 1920; }
+              else { w = (w/h)*1920; h = 1920; }
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+            let q = 0.9;
+            const compress = () => canvas.toBlob(b => {
+              if (b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
+              else resolve(new File([b], file.name, {type: 'image/jpeg'}));
+            }, 'image/jpeg', q);
+            compress();
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadToImgBB(file) {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {method: 'POST', body: fd});
+      return (await res.json()).data.url;
+    }
+
+    function openLightbox(url) {
+      document.getElementById('lightboxImage').src = url;
+      document.getElementById('lightbox').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    /* ========= CAMERA/GALLERY PICKER + BACK BUTTON ========= */
+    function openImageSource() {
+      document.getElementById('imageSourceModal').classList.add('active');
+      document.body.classList.add('modal-open');
+      history.pushState({ imageSourceModal: true }, '');
+    }
+
+    function closeImageSource(fromPopState = false) {
+      const modal = document.getElementById('imageSourceModal');
+      if (!modal.classList.contains('active')) return;
+
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+
+      if (!fromPopState) {
+        history.back();
+      }
+    }
+
+    function openCamera() {
+      closeImageSource();
+      document.getElementById('cameraInput').click();
+    }
+
+    function openGallery() {
+      closeImageSource();
+      document.getElementById('galleryInput').click();
+    }
+
+    window.addEventListener('popstate', () => {
+      const modal = document.getElementById('imageSourceModal');
+      if (modal && modal.classList.contains('active')) {
+        closeImageSource(true);
+      } else {
+        // If message action sheet is open, close it too (nice UX)
+        const a = document.getElementById('msgActionModal');
+        if (a && a.classList.contains('active')) {
+          closeMsgActions(true);
+        }
+      }
+    });
+    /* ====================================================== */
+
+    /* ========= WHATSAPP-LIKE REPLY SYSTEM ========= */
+    function attachLongPressForReply(bubbleEl) {
+      let pressTimer = null;
+      let startX = 0, startY = 0;
+      let moved = false;
+
+      const start = (clientX, clientY) => {
+        startX = clientX; startY = clientY;
+        moved = false;
+
+        pressTimer = setTimeout(() => {
+          // Only trigger if still pressed and not moved
+          openMsgActionsFromBubble(bubbleEl);
+        }, 450); // long-press delay
+      };
+
+      const cancel = () => {
+        if (pressTimer) clearTimeout(pressTimer);
+        pressTimer = null;
+      };
+
+      bubbleEl.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        start(t.clientX, t.clientY);
+      }, { passive: true });
+
+      bubbleEl.addEventListener('touchmove', (e) => {
+        if (!pressTimer) return;
+        const t = e.touches[0];
+        const dx = Math.abs(t.clientX - startX);
+        const dy = Math.abs(t.clientY - startY);
+        if (dx > 10 || dy > 10) {
+          moved = true;
+          cancel();
+        }
+      }, { passive: true });
+
+      bubbleEl.addEventListener('touchend', cancel, { passive: true });
+      bubbleEl.addEventListener('touchcancel', cancel, { passive: true });
+
+      // Desktop fallback: right click to open actions
+      bubbleEl.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        openMsgActionsFromBubble(bubbleEl);
+      });
+    }
+
+    function openMsgActionsFromBubble(bubbleEl) {
+      const id = bubbleEl.getAttribute('data-id') || '';
+      const nickname = bubbleEl.getAttribute('data-nickname') || '';
+      const color = bubbleEl.getAttribute('data-color') || '';
+      const snippet = bubbleEl.getAttribute('data-snippet') || '';
+
+      actionTarget = { id, nickname, color, text: snippet };
+
+      document.getElementById('msgActionName').textContent = nickname || 'Usuário';
+      document.getElementById('msgActionText').textContent = snippet || '';
+      document.getElementById('msgActionModal').classList.add('active');
+      document.body.classList.add('modal-open');
+
+      history.pushState({ msgActionModal: true }, '');
+    }
+
+    function closeMsgActions(fromPopState = false) {
+      const modal = document.getElementById('msgActionModal');
+      if (!modal.classList.contains('active')) return;
+
+      modal.classList.remove('active');
+      document.body.classList.remove('modal-open');
+      actionTarget = null;
+
+      if (!fromPopState) {
+        history.back();
+      }
+    }
+
+    function startReplyFromAction() {
+      if (!actionTarget) return;
+      setReplyTarget(actionTarget);
+      closeMsgActions();
+    }
+
+    function setReplyTarget(target) {
+      replyTarget = target;
+
+      const bar = document.getElementById('replyBar');
+      const title = document.getElementById('replyBarTitle');
+      const text = document.getElementById('replyBarText');
+
+      title.textContent = `Respondendo a ${target.nickname || 'mensagem'}`;
+      text.textContent = target.text || '';
+
+      bar.classList.add('active');
+
+      // Focus input and keep keyboard open
+      const input = document.getElementById('messageInput');
+      input.focus();
+    }
+
+    function cancelReply() {
+      replyTarget = null;
+      const bar = document.getElementById('replyBar');
+      bar.classList.remove('active');
+    }
+    /* ============================================== */
+
+    // Register SW (unchanged)
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js");
+      });
+    }
+  </script>
 </body>
 </html>
