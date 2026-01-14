@@ -32,14 +32,14 @@ messaging.onBackgroundMessage((payload) => {
   const title = data.title || "Lil's Life Chat";
   const body = data.body || "Nova mensagem";
 
-  const options = {
-    body,
-    icon: "/images/icon-192.png",     // adjust if your icon path differs
-    badge: "/images/icon-192.png",    // optional
-    data: {
-      url: data.url || "/chat/",      // where to open on click
-    }
-  };
+const options = {
+  body,
+  icon: "/images/icon192.png",
+  badge: "/images/icon192.png",
+  data: {
+    url: data.url || "/chat/"
+  }
+};
 
   self.registration.showNotification(title, options);
 });

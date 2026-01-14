@@ -57,7 +57,7 @@ exports.notifyOnNewMessage = onValueCreated("/messages/{id}", async (event) => {
       notification: {
         title,
         body,
-        icon: "/images/icon-192.png" // change if your icon path differs
+        icon: "/images/icon192.png"// change if your icon path differs
       }
     }
   };
