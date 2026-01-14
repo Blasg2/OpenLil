@@ -1169,7 +1169,7 @@
     }
 
     // ========= PUSH =========
-    async function enableNotifications() {
+   async function enableNotifications() {
   if (!authReady || !userId) {
     alert("Auth ainda não carregou.");
     return;
@@ -1186,7 +1186,7 @@
     return;
   }
 
-  // Ensure SW is registered/ready
+  // Make sure root SW is active
   await navigator.serviceWorker.register("/sw.js");
   const swReg = await navigator.serviceWorker.ready;
 
@@ -1200,19 +1200,11 @@
     return;
   }
 
-  // ---- NEW: clean up old token(s) for this uid ----
-  const prevToken = localStorage.getItem("fcmToken") || "";
+  // Save token and REMOVE any others under this uid
+  const ref = database.ref(`fcmTokens/${userId}`);
+  await ref.child(token).set(Date.now());
 
-  // Save current token
-  await database.ref(`fcmTokens/${userId}/${token}`).set(Date.now());
-
-  // If we had a previous token, remove it (prevents double push)
-  if (prevToken && prevToken !== token) {
-    await database.ref(`fcmTokens/${userId}/${prevToken}`).remove();
-  }
-
-  // Optional but recommended: enforce ONE token per uid (removes any extras)
-  const snap = await database.ref(`fcmTokens/${userId}`).once("value");
+  const snap = await ref.once("value");
   const tokenMap = snap.val() || {};
   const updates = {};
   for (const t of Object.keys(tokenMap)) {
@@ -1222,18 +1214,38 @@
     await database.ref().update(updates);
   }
 
-  localStorage.setItem("fcmToken", token);
-
   alert("Notificações ativadas!");
 }
 
 
+
     // Foreground handler (optional)
     if (messaging) {
-      messaging.onMessage((_payload) => {
-        // chat open → you can show an in-app toast if you want
-      });
-    }
+     messaging.onMessage(async (payload) => {
+  // If the chat is visible on screen, DON'T create a system notification.
+  // (You can later do an in-app toast here.)
+  if (document.visibilityState === "visible") return;
+
+  // If the page is open but not visible (background tab), show via SW
+  try {
+    const data = payload?.data || {};
+    const title = data.title || "Lil's Life Chat";
+    const body  = data.body  || "Nova mensagem";
+
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification(title, {
+      body,
+      icon: "/images/icon192.png",
+      badge: "/images/icon192.png",
+      tag: "lilslife-chat",
+      renotify: true,
+      data: { url: data.url || "/chat/" }
+    });
+  } catch (e) {
+    console.log("onMessage showNotification failed:", e);
+  }
+});
+
   </script>
 </body>
 </html>
