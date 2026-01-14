@@ -17,20 +17,41 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
+messaging.onBackgroundMessage(async (payload) => {
   const data = payload.data || {};
   const title = data.title || "Lil's Life Chat";
   const body = data.body || "Nova mensagem";
 
-  self.registration.showNotification(title, {
-    body,
+  const TAG = "lilslife-chat";
+
+  // Check if a chat notification already exists
+  const existing = await self.registration.getNotifications({ tag: TAG });
+
+  // If there is already one, we will replace it silently
+  const isReplace = existing && existing.length > 0;
+
+  // Optional: keep a counter in notification.data
+  let count = 1;
+  if (isReplace) {
+    const prev = existing[0];
+    const prevCount = (prev?.data && prev.data.count) ? Number(prev.data.count) : 1;
+    count = prevCount + 1;
+  }
+
+  await self.registration.showNotification(title, {
+    body: isReplace ? `${count} novas mensagens` : body, // first shows the actual message, later shows count
     icon: "/images/icon192.png",
     badge: "/images/icon192.png",
-    tag: "lilslife-chat",   // THIS makes it replace (nest)
-    renotify: true,
-    data: { url: data.url || "/chat/" }
+    tag: TAG,                 // makes it replace (nest)
+    renotify: false,          // don't re-alert on replace
+    silent: isReplace,        // 🔥 FIRST = sound, REPLACE = silent
+    data: {
+      url: data.url || "/chat/",
+      count
+    }
   });
 });
+
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
