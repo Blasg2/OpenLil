@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
   <link rel="manifest" href="/manifest.webmanifest">
 
   <meta charset="UTF-8">
@@ -666,6 +667,9 @@
     async function boot() {
       const user = await ensureAnonAuth();
       userId = user.uid;
+
+      console.log("MY UID:", userId);
+
       authReady = true;
 
       userNickname = await loadNicknameFromDbOrLocal(userId);
@@ -1163,47 +1167,63 @@
 
     // ========= PUSH =========
     async function enableNotifications() {
-      if (!authReady || !userId) {
-        alert("Auth ainda não carregou.");
-        return;
-      }
-      if (!messaging) {
-        alert("FCM não disponível neste navegador.");
-        return;
-      }
-      if (!("Notification" in window)) {
-        alert("Este navegador não suporta notificações.");
-        return;
-      }
-      if (!("serviceWorker" in navigator)) {
-        alert("Este navegador não suporta Service Worker.");
-        return;
-      }
+  if (!authReady || !userId) {
+    alert("Auth ainda não carregou.");
+    return;
+  }
 
-      const perm = await Notification.requestPermission();
-      if (perm !== "granted") {
-        alert("Permissão negada.");
-        return;
-      }
+  if (!("Notification" in window)) {
+    alert("Este navegador não suporta notificações.");
+    return;
+  }
 
-      // Ensure SW is ready
-      if (!swReg) {
-        swReg = await navigator.serviceWorker.ready;
-      }
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") {
+    alert("Permissão negada.");
+    return;
+  }
 
-      const token = await messaging.getToken({
-        vapidKey: VAPID_PUBLIC_KEY,
-        serviceWorkerRegistration: swReg
-      });
+  // Ensure SW is registered/ready
+  await navigator.serviceWorker.register("/sw.js");
+  const swReg = await navigator.serviceWorker.ready;
 
-      if (!token) {
-        alert("Não consegui gerar o token de push.");
-        return;
-      }
+  const token = await messaging.getToken({
+    vapidKey: VAPID_PUBLIC_KEY,
+    serviceWorkerRegistration: swReg
+  });
 
-      await database.ref(`fcmTokens/${userId}/${token}`).set(true);
-      alert("Notificações ativadas!");
-    }
+  if (!token) {
+    alert("Não consegui gerar o token de push.");
+    return;
+  }
+
+  // ---- NEW: clean up old token(s) for this uid ----
+  const prevToken = localStorage.getItem("fcmToken") || "";
+
+  // Save current token
+  await database.ref(`fcmTokens/${userId}/${token}`).set(Date.now());
+
+  // If we had a previous token, remove it (prevents double push)
+  if (prevToken && prevToken !== token) {
+    await database.ref(`fcmTokens/${userId}/${prevToken}`).remove();
+  }
+
+  // Optional but recommended: enforce ONE token per uid (removes any extras)
+  const snap = await database.ref(`fcmTokens/${userId}`).once("value");
+  const tokenMap = snap.val() || {};
+  const updates = {};
+  for (const t of Object.keys(tokenMap)) {
+    if (t !== token) updates[`fcmTokens/${userId}/${t}`] = null;
+  }
+  if (Object.keys(updates).length) {
+    await database.ref().update(updates);
+  }
+
+  localStorage.setItem("fcmToken", token);
+
+  alert("Notificações ativadas!");
+}
+
 
     // Foreground handler (optional)
     if (messaging) {

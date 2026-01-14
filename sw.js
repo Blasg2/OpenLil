@@ -36,9 +36,9 @@ const options = {
   body,
   icon: "/images/icon192.png",
   badge: "/images/icon192.png",
-  data: {
-    url: data.url || "/chat/"
-  }
+  tag: "lilslife-chat",     // <-- this makes it replace the previous one
+  renotify: true,           // optional: makes it alert again when replaced
+  data: { url: data.url || "/chat/" }
 };
 
   self.registration.showNotification(title, options);
