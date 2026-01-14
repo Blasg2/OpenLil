@@ -29,6 +29,9 @@
       -webkit-touch-callout: none !important;
     }
 
+    /* NEW: prevent nickname flash while booting */
+    body.booting #nicknameScreen { display: none !important; }
+
     /* HEADER */
     #chatHeader {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -449,7 +452,7 @@
   </style>
 </head>
 
-<body>
+<body class="booting">
   <!-- LIGHTBOX -->
   <div id="lightbox" onclick="closeLightbox()">
     <button id="closeLightbox">×</button>
@@ -505,7 +508,7 @@
         <p>Chat ao vivo</p>
       </div>
 
-      <!-- NEW: notifications button -->
+      <!-- notifications button -->
       <button id="pushBtn" title="Ativar notificações" onclick="enableNotifications()">🔔</button>
     </div>
 
@@ -528,17 +531,11 @@
     </div>
   </div>
 
-  <!-- Firebase compat (you already use these) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-
-  
-  <!-- NEW: auth + messaging compat -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
-
-
 
   <script>
     const firebaseConfig = {
@@ -557,8 +554,11 @@
     const auth = firebase.auth();
 
     // FCM (web push)
-    const messaging = firebase.messaging();
-    const VAPID_PUBLIC_KEY = "BEosaFitBubtud4pjzqWwzjldLIUUyoI0W2-51bM17I0Cww0A3gG3HtQTWMaXUCoxHS4tO0OZp-q_1k_aVaUukgE";
+    let messaging = null;
+    try { messaging = firebase.messaging(); } catch (e) { messaging = null; }
+
+    // FIXED: correct VAPID key (LIUyo..., not LIUUyo...)
+    const VAPID_PUBLIC_KEY = "BEosaFitBubtud4pjzqWwzjldLIUyoI0W2-51bM17I0Cww0A3gG3HtQTWMaXUCoxHS4tO0OZp-q_1k_aVaUukgE";
 
     const messagesRef = database.ref('messages');
     const IMGBB_API_KEY = '18ab4a20c315acaf53a635943d332eba';
@@ -566,7 +566,7 @@
     let userNickname = null;
     let userColor = null;
 
-    // NEW: userId comes from Firebase Auth UID
+    // userId comes from Firebase Auth UID
     let userId = null;
     let authReady = false;
 
@@ -625,27 +625,36 @@
       };
     }
 
-    // ========= AUTH BOOTSTRAP (NEW) =========
-    async function ensureAnonAuth() {
-      // already signed in?
-      if (auth.currentUser) return auth.currentUser;
+    // ========= SERVICE WORKER REG (single SW) =========
+    let swReg = null;
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        try {
+          swReg = await navigator.serviceWorker.register("/sw.js");
+          // console.log("SW registered:", swReg.scope);
+        } catch (e) {
+          console.error("SW register failed:", e);
+        }
+      });
+    }
 
-      // sign in anonymously (creates a stable uid for this browser storage)
+    // ========= AUTH BOOTSTRAP =========
+    async function ensureAnonAuth() {
+      if (auth.currentUser) return auth.currentUser;
       const cred = await auth.signInAnonymously();
       return cred.user;
     }
 
     async function loadNicknameFromDbOrLocal(uid) {
-      // Try DB first
       try {
         const snap = await database.ref(`users/${uid}/profile/nickname`).once('value');
         const nick = (snap.val() || '').trim();
         if (nick) return nick;
       } catch {}
 
-      // fallback localStorage
       const localNick = (localStorage.getItem('chatNickname') || '').trim();
       if (localNick) return localNick;
+
       return null;
     }
 
@@ -659,29 +668,27 @@
       userId = user.uid;
       authReady = true;
 
-      // Load saved identity
       userNickname = await loadNicknameFromDbOrLocal(userId);
       userColor = await loadColorFromLocal();
 
+      // stop hiding nickname screen now that boot finished
+      document.body.classList.remove('booting');
+
       if (userNickname && userColor) {
-        // ensure activeUsers presence
         await database.ref('activeUsers/' + userId).set({
           nickname: userNickname,
           color: userColor,
           timestamp: Date.now()
         });
         database.ref('activeUsers/' + userId).onDisconnect().remove();
-
         showChat();
       } else {
-        // show nickname screen (default)
+        // show nickname screen
       }
     }
-
-    // start boot immediately
     boot().catch(console.error);
 
-    // ========= ENTER CHAT (UPDATED) =========
+    // ========= ENTER CHAT =========
     async function enterChat() {
       if (!authReady || !userId) {
         alert("Auth ainda não carregou. Tenta de novo em 1s.");
@@ -698,7 +705,6 @@
 
       userNickname = nickname;
 
-      // Pick a color (same logic as yours)
       const snapshot = await database.ref('activeUsers').once('value');
       const activeUsers = snapshot.val() || {};
       const usedColors = Object.values(activeUsers).map(u => u.color);
@@ -708,18 +714,15 @@
 
       userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
-      // Persist locally (so reload is instant)
       localStorage.setItem('chatNickname', userNickname);
       localStorage.setItem('chatColor', userColor);
 
-      // Persist in DB (so it follows UID)
       await database.ref(`users/${userId}/profile`).set({
         nickname: userNickname,
         color: userColor,
         updatedAt: Date.now()
       });
 
-      // activeUsers uses uid now
       await database.ref('activeUsers/' + userId).set({
         nickname: userNickname,
         color: userColor,
@@ -847,7 +850,7 @@
       return div;
     }
 
-    // ========= SEND MESSAGE (UPDATED: adds uid) =========
+    // ========= SEND MESSAGE (adds uid) =========
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const message = input.value.trim();
@@ -1158,60 +1161,56 @@
       document.getElementById('replyBar').classList.remove('active');
     }
 
-    // ========= PUSH (NEW) =========
+    // ========= PUSH =========
     async function enableNotifications() {
       if (!authReady || !userId) {
         alert("Auth ainda não carregou.");
         return;
       }
-
+      if (!messaging) {
+        alert("FCM não disponível neste navegador.");
+        return;
+      }
       if (!("Notification" in window)) {
         alert("Este navegador não suporta notificações.");
         return;
       }
+      if (!("serviceWorker" in navigator)) {
+        alert("Este navegador não suporta Service Worker.");
+        return;
+      }
 
-      // Must be user gesture (this function is called by button click)
       const perm = await Notification.requestPermission();
       if (perm !== "granted") {
         alert("Permissão negada.");
         return;
       }
 
-      // Register a dedicated SW for FCM under /chat scope
-      const swReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
+      // Ensure SW is ready
+      if (!swReg) {
+        swReg = await navigator.serviceWorker.ready;
+      }
 
-      const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: swReg });
+      const token = await messaging.getToken({
+        vapidKey: VAPID_PUBLIC_KEY,
+        serviceWorkerRegistration: swReg
+      });
+
       if (!token) {
         alert("Não consegui gerar o token de push.");
         return;
       }
 
-      // Save token to RTDB for this uid
       await database.ref(`fcmTokens/${userId}/${token}`).set(true);
-
       alert("Notificações ativadas!");
     }
 
-    // Optional: foreground handler (when chat is open)
-    messaging.onMessage((payload) => {
-      // You can show an in-app toast here if you want
-      // console.log("FCM foreground message", payload);
-    });
-
-    let swReg = null;
-
-// Register SW
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    try {
-      swReg = await navigator.serviceWorker.register("/sw.js");
-      console.log("SW registered:", swReg.scope);
-    } catch (e) {
-      console.error("SW register failed:", e);
+    // Foreground handler (optional)
+    if (messaging) {
+      messaging.onMessage((_payload) => {
+        // chat open → you can show an in-app toast if you want
+      });
     }
-  });
-}
-
   </script>
 </body>
 </html>

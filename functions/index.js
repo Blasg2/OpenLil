@@ -7,10 +7,10 @@ exports.notifyOnNewMessage = onValueCreated("/messages/{id}", async (event) => {
   const msg = event.data.val();
   if (!msg || !msg.uid) return;
 
-  const senderUid = msg.uid;
-  const messageId = event.params.id;
+  const senderUid = String(msg.uid);
+  const messageId = String(event.params.id);
 
-  // Load all tokens once
+  // Load all tokens
   const tokensSnap = await admin.database().ref("fcmTokens").get();
   if (!tokensSnap.exists()) return;
 
@@ -21,6 +21,7 @@ exports.notifyOnNewMessage = onValueCreated("/messages/{id}", async (event) => {
 
   for (const [uid, tokenMap] of Object.entries(allTokens)) {
     if (uid === senderUid) continue; // skip sender
+    if (!tokenMap) continue;
 
     for (const token of Object.keys(tokenMap)) {
       tokens.push(token);
@@ -28,20 +29,36 @@ exports.notifyOnNewMessage = onValueCreated("/messages/{id}", async (event) => {
     }
   }
 
-  if (tokens.length === 0) return; // no one to notify
+  if (tokens.length === 0) return;
 
-  const title = msg.nickname || "Lil's Life Chat";
+  const title = msg.nickname ? String(msg.nickname) : "Lil's Life Chat";
   const body =
-    msg.message ? String(msg.message).slice(0, 120) : // first 120 chars of text
-    msg.imageUrl ? "📷 Imagem" : // or "Imagem" if it's a picture
+    msg.message ? String(msg.message).slice(0, 120) :
+    msg.imageUrl ? "📷 Imagem" :
     "Nova mensagem";
+
+  // Make SW open chat (and optionally scroll/highlight later if you add that)
+  const url = "/chat/";
 
   const multicast = {
     tokens,
-    notification: { title, body },
+
+    // IMPORTANT for your SW: you read payload.data.title/body/url
     data: {
+      title,
+      body,
+      url,
       messageId,
       senderUid
+    },
+
+    // WebPush notification payload (what actually displays on web)
+    webpush: {
+      notification: {
+        title,
+        body,
+        icon: "/images/icon-192.png" // change if your icon path differs
+      }
     }
   };
 
