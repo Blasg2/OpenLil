@@ -23,6 +23,13 @@
 
     body.modal-open { overflow: hidden; }
 
+    /* Hard-disable selection while long-pressing (helps kill Android copy/share popup) */
+    body.no-select, body.no-select * {
+      -webkit-user-select: none !important;
+      user-select: none !important;
+      -webkit-touch-callout: none !important;
+    }
+
     /* HEADER */
     #chatHeader {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -36,16 +43,7 @@
     }
     #chatTitle { flex: 1; min-width: 0; }
     #chatTitle h1 { font-size: 18px; font-weight: 600; }
-
-    /* second line: online list */
-    #chatTitle p {
-      font-size: 12px;
-      opacity: 0.95;
-      margin-top: 3px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    #chatTitle p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
 
     /* NICKNAME SETUP */
     #nicknameScreen {
@@ -113,10 +111,12 @@
       word-wrap: break-word;
       position: relative;
 
-      /* stop Android selection/callout */
+      /* prevent selection/callout */
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
+
+      /* allow vertical scroll to start even if touch begins on message */
       touch-action: pan-y;
     }
     .message-bubble * {
@@ -125,24 +125,44 @@
       -webkit-touch-callout: none;
     }
 
-    /* Highlight on scroll-to (4s) */
-    .message-bubble.highlight { animation: pulseGlow 4s ease; }
-    @keyframes pulseGlow {
-      0%   { box-shadow: 0 0 0 rgba(102,126,234,0); }
-      10%  { box-shadow: 0 0 0 6px rgba(102,126,234,0.28); }
-      70%  { box-shadow: 0 0 0 6px rgba(102,126,234,0.28); }
-      100% { box-shadow: 0 0 0 rgba(102,126,234,0); }
+    /* Highlight whole bubble for 4s (not just border) */
+    .message-bubble.highlight { animation: highlightWhole 4s ease; }
+    @keyframes highlightWhole {
+      0%   { background: #1f1f1f; box-shadow: 0 0 0 rgba(102,126,234,0); }
+      10%  { background: #2a2a44; box-shadow: 0 0 0 8px rgba(102,126,234,0.22); }
+      70%  { background: #2a2a44; box-shadow: 0 0 0 8px rgba(102,126,234,0.22); }
+      100% { background: #1f1f1f; box-shadow: 0 0 0 rgba(102,126,234,0); }
     }
 
     .message-nickname { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
     .message-text { color: #e8e8e8; font-size: 15px; line-height: 1.4; }
 
-    .message-image {
+    /* Image + watermark badge */
+    .image-wrap {
+      position: relative;
+      display: inline-block;
+      margin-top: 5px;
       max-width: 250px;
       width: 100%;
+    }
+    .message-image {
+      width: 100%;
       border-radius: 8px;
-      margin-top: 5px;
       cursor: pointer;
+      display: block;
+    }
+    .image-watermark {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 12px;
+      padding: 4px 6px;
+      border-radius: 10px;
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
     }
 
     .message-time {
@@ -490,7 +510,7 @@
     <div id="chatHeader">
       <div id="chatTitle">
         <h1>Lil's Life Chat</h1>
-        <p id="onlineLine">Online: ...</p>
+        <p>Chat ao vivo</p>
       </div>
     </div>
 
@@ -531,7 +551,6 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const messagesRef = database.ref('messages');
-    const activeUsersRef = database.ref('activeUsers');
     const IMGBB_API_KEY = '18ab4a20c315acaf53a635943d332eba';
 
     let userNickname = null;
@@ -635,7 +654,6 @@
       document.getElementById('chatScreen').classList.add('active');
 
       loadMessages();
-      startOnlineUsersUI();
 
       // Auto-resize textarea
       const textarea = document.getElementById('messageInput');
@@ -681,6 +699,7 @@
 
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
+      // highlight full bubble for 4s
       el.classList.remove('highlight');
       void el.offsetWidth; // reflow to retrigger animation
       el.classList.add('highlight');
@@ -694,7 +713,13 @@
 
       let content = '';
       if (msg.imageUrl) {
-        content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
+        // photo with watermark badge at bottom-right
+        content = `
+          <div class="image-wrap">
+            <img src="${escapeHtml(msg.imageUrl)}" class="message-image" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">
+            <div class="image-watermark">📷</div>
+          </div>
+        `;
       } else if (msg.message) {
         if (msg.transformedIndices?.length) {
           const words = msg.message.split(' ');
@@ -927,70 +952,72 @@
     });
     /* ====================================================== */
 
-  /* ========= WHATSAPP-LIKE REPLY SYSTEM ========= */
-function attachLongPressForReply(bubbleEl) {
-  let pressTimer = null;
-  let startX = 0, startY = 0;
-  let longPressFired = false;
+    /* ========= WHATSAPP-LIKE REPLY SYSTEM ========= */
+    function attachLongPressForReply(bubbleEl) {
+      let pressTimer = null;
+      let startX = 0, startY = 0;
+      let longPressFired = false;
 
-  // Prevent desktop context menu
-  bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
+      // Stop desktop context menu
+      bubbleEl.addEventListener('contextmenu', (e) => e.preventDefault());
 
-  // Prevent selection start (helps on some Androids)
-  bubbleEl.addEventListener('selectstart', (e) => e.preventDefault());
+      // Stop some Android selection cases
+      bubbleEl.addEventListener('selectstart', (e) => e.preventDefault());
 
-  const start = (clientX, clientY) => {
-    startX = clientX;
-    startY = clientY;
-    longPressFired = false;
+      const start = (clientX, clientY) => {
+        startX = clientX;
+        startY = clientY;
+        longPressFired = false;
 
-    pressTimer = setTimeout(() => {
-      longPressFired = true;
+        // While holding, disable selection globally (reduces Android copy/share popup)
+        document.body.classList.add('no-select');
 
-      // Clear any text selection (kills the "Copy/Share" bar on many devices)
-      try { window.getSelection()?.removeAllRanges?.(); } catch {}
+        pressTimer = setTimeout(() => {
+          longPressFired = true;
 
-      openMsgActionsFromBubble(bubbleEl);
-    }, 450);
-  };
+          // Clear selection that may have started
+          try { window.getSelection()?.removeAllRanges?.(); } catch {}
 
-  const cancel = () => {
-    if (pressTimer) clearTimeout(pressTimer);
-    pressTimer = null;
-  };
+          openMsgActionsFromBubble(bubbleEl);
+        }, 450);
+      };
 
-  // IMPORTANT: keep this passive so scrolling + tapping still work
-  bubbleEl.addEventListener('touchstart', (e) => {
-    if (e.touches.length !== 1) return;
-    const t = e.touches[0];
-    start(t.clientX, t.clientY);
-  }, { passive: true });
+      const cancel = () => {
+        if (pressTimer) clearTimeout(pressTimer);
+        pressTimer = null;
+        document.body.classList.remove('no-select');
+      };
 
-  bubbleEl.addEventListener('touchmove', (e) => {
-    if (!pressTimer) return;
-    const t = e.touches[0];
-    const dx = Math.abs(t.clientX - startX);
-    const dy = Math.abs(t.clientY - startY);
+      // Keep passive so scroll + clicks still work
+      bubbleEl.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        const t = e.touches[0];
+        start(t.clientX, t.clientY);
+      }, { passive: true });
 
-    // if user is scrolling, cancel long-press
-    if (dx > 10 || dy > 10) cancel();
-  }, { passive: true });
+      bubbleEl.addEventListener('touchmove', (e) => {
+        if (!pressTimer) return;
+        const t = e.touches[0];
+        const dx = Math.abs(t.clientX - startX);
+        const dy = Math.abs(t.clientY - startY);
 
-  bubbleEl.addEventListener('touchend', (e) => {
-    // If long-press fired, prevent the "tap/click" from doing anything weird
-    // (usually not necessary, but safe)
-    if (longPressFired) {
-      // Do NOT preventDefault() here; just let it end normally.
-      // The modal is already open.
+        // user is scrolling -> cancel long press
+        if (dx > 10 || dy > 10) cancel();
+      }, { passive: true });
+
+      bubbleEl.addEventListener('touchend', () => {
+        // If the long-press fired, selection popup might still try to appear on release:
+        // clear selection again + remove no-select
+        if (longPressFired) {
+          try { window.getSelection()?.removeAllRanges?.(); } catch {}
+        }
+        cancel();
+      }, { passive: true });
+
+      bubbleEl.addEventListener('touchcancel', () => {
+        cancel();
+      }, { passive: true });
     }
-    cancel();
-  }, { passive: true });
-
-  bubbleEl.addEventListener('touchcancel', () => {
-    cancel();
-  }, { passive: true });
-}
-
 
     function openMsgActionsFromBubble(bubbleEl) {
       actionTarget = buildReplyTargetFromBubble(bubbleEl);
@@ -1052,46 +1079,6 @@ function attachLongPressForReply(bubbleEl) {
     }
     /* ============================================== */
 
-    /* ========= ONLINE USERS IN HEADER ========= */
-    function startOnlineUsersUI() {
-      const onlineLine = document.getElementById('onlineLine');
-      if (!onlineLine) return;
-
-      // live updates
-      activeUsersRef.on('value', (snapshot) => {
-        const v = snapshot.val() || {};
-        const now = Date.now();
-
-        // keep only users updated in last 2 minutes (stale cleanup)
-        let list = Object.values(v)
-          .filter(u => u && u.nickname && u.color && u.timestamp && (now - u.timestamp) < 120000);
-
-        // sort by nickname for stable display
-        list.sort((a, b) => (a.nickname || '').localeCompare(b.nickname || ''));
-
-        const max = 10;
-        const shown = list.slice(0, max);
-        const extra = list.length - shown.length;
-
-        if (shown.length === 0) {
-          onlineLine.textContent = 'Online: ninguém';
-          return;
-        }
-
-        const parts = shown.map(u => `<span style="color:${escapeHtml(u.color)};font-weight:700">${escapeHtml(u.nickname)}</span>`);
-        const extraText = extra > 0 ? ` <span style="opacity:0.9">+${extra}</span>` : '';
-
-        onlineLine.innerHTML = `Online: ${parts.join(', ')}${extraText}`;
-      });
-
-      // keep our own timestamp fresh (so we don't disappear)
-      setInterval(() => {
-        if (!userNickname || !userColor) return;
-        database.ref('activeUsers/' + userId + '/timestamp').set(Date.now());
-      }, 30000);
-    }
-    /* ============================================== */
-
     // Register SW
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
@@ -1101,4 +1088,3 @@ function attachLongPressForReply(bubbleEl) {
   </script>
 </body>
 </html>
-
