@@ -919,12 +919,12 @@
             font-family: monospace;
         }
 
-                /* Smaller cover image on small desktop screens */
-        @media (min-width: 901px) and (max-width: 1400px) {
-            .cover-image {
-                max-width: 30px !important;  /* Adjust this value */
-            }
-        }
+@media (min-width: 901px) and (max-width: 1400px) {
+    .cover-image {
+        max-width: 50px !important;
+        width: 50px !important;
+    }
+}
         
         /* Responsive adjustments */
         @media (max-width: 900px) {
@@ -2342,6 +2342,7 @@ function updateChatPreview() {
     </script>
 </body>
 </html>
+
 
 
 
