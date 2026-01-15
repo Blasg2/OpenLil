@@ -872,6 +872,8 @@
       loadedMessageIds.clear();
       oldestTs = null;
       newestTs = 0;
+      hasReachedStart = false; // Reset this flag
+
 
       container.addEventListener('scroll', () => {
         // Infinite older load (more forgiving than == 0)
@@ -928,40 +930,50 @@
       });
     }
 
-    async function loadOlderMessages() {
-      if (isLoadingOlder) return;
-      if (!oldestTs) return;
+    let hasReachedStart = false; // Add this at the top with other variables
 
-      isLoadingOlder = true;
-      setOlderLoading(true);
+  async function loadOlderMessages() {
+  if (isLoadingOlder) return;
+  if (!oldestTs) return;
+  if (hasReachedStart) return; // Stop if we've loaded everything
 
-      const container = document.getElementById('messagesContainer');
-      const prevScrollHeight = container.scrollHeight;
+  isLoadingOlder = true;
+  setOlderLoading(true);
 
-      const olderSnap = await messagesRef
-        .orderByChild('timestamp')
-        .endAt(oldestTs - 1)
-        .limitToLast(PAGE_SIZE)
-        .once('value');
+  const container = document.getElementById('messagesContainer');
+  const prevScrollHeight = container.scrollHeight;
 
-      const older = [];
-      olderSnap.forEach((child) => older.push({ id: child.key, ...child.val() }));
-      older.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+  const olderSnap = await messagesRef
+    .orderByChild('timestamp')
+    .endAt(oldestTs - 1)
+    .limitToLast(PAGE_SIZE)
+    .once('value');
 
-      if (older.length) {
-        older.forEach(m => appendMessage(m, true));
-        oldestTs = older[0].timestamp || oldestTs;
+  const older = [];
+  olderSnap.forEach((child) => older.push({ id: child.key, ...child.val() }));
+  older.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
 
-        // Keep view stable
-        const newScrollHeight = container.scrollHeight;
-        const diff = newScrollHeight - prevScrollHeight;
-        container.scrollTop = diff;
-      }
+  if (older.length) {
+    older.forEach(m => appendMessage(m, true));
+    oldestTs = older[0].timestamp || oldestTs;
 
-      setOlderLoading(false);
-      isLoadingOlder = false;
+    // Keep view stable - but ensure we're ABOVE the trigger threshold
+    const newScrollHeight = container.scrollHeight;
+    const diff = newScrollHeight - prevScrollHeight;
+    container.scrollTop = Math.max(diff, 50); // At least 50px from top
+    
+    // Check if we got fewer messages than requested = we've reached the start
+    if (older.length < PAGE_SIZE) {
+      hasReachedStart = true;
     }
+  } else {
+    // No more messages
+    hasReachedStart = true;
+  }
 
+  setOlderLoading(false);
+  isLoadingOlder = false;
+}
     function appendMessage(msg, prepend) {
       if (!msg || !msg.id) return;
       if (loadedMessageIds.has(msg.id)) return;
