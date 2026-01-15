@@ -815,48 +815,79 @@ async function loadNicknameFromDbOrLocal(uid) {
       document.getElementById('bootOverlay').textContent = "Erro ao carregar.";
     });
 
+async function isNicknameTakenInUsers(nickname) {
+  const want = nickname.trim().toLowerCase();
+
+  const snap = await database.ref('users').once('value');
+  const users = snap.val() || {};
+
+  for (const uid of Object.keys(users)) {
+    const n = String(users[uid]?.profile?.nickname || '').trim().toLowerCase();
+    if (n && n === want) return true;
+  }
+  return false;
+}
+
+
+
     async function enterChat() {
-      if (!authReady || !userId) {
-        alert("Auth ainda não carregou. Tenta de novo em 1s.");
-        return;
-      }
+  if (!authReady || !userId) {
+    alert("Auth ainda não carregou. Tenta de novo em 1s.");
+    return;
+  }
 
-      const input = document.getElementById('nicknameInput');
-      const nickname = input.value.trim();
-      if (nickname.length < 2) {
-        alert('Apelido deve ter pelo menos 2 caracteres!');
-        return;
-      }
+  const input = document.getElementById('nicknameInput');
+  const nickname = input.value.trim();
+  if (nickname.length < 2) {
+    alert('Apelido deve ter pelo menos 2 caracteres!');
+    return;
+  }
 
-      userNickname = nickname;
+  // Check if nickname already exists anywhere under users/*/profile/nickname
+  const want = nickname.toLowerCase();
+  const usersSnap = await database.ref('users').once('value');
+  const users = usersSnap.val() || {};
+  for (const uid of Object.keys(users)) {
+    const existing = String(users[uid]?.profile?.nickname || '').trim().toLowerCase();
+    if (existing && existing === want) {
+      // allow the same user to re-use their own nickname
+      if (uid === userId) break;
 
-      const snapshot = await database.ref('activeUsers').once('value');
-      const activeUsers = snapshot.val() || {};
-      const usedColors = Object.values(activeUsers).map(u => u.color);
-
-      let availableColors = colors.filter(c => !usedColors.includes(c));
-      if (availableColors.length === 0) availableColors = colors;
-      userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
-
-      localStorage.setItem('chatNickname', userNickname);
-      localStorage.setItem('chatColor', userColor);
-
-      await database.ref(`users/${userId}/profile`).set({
-        nickname: userNickname,
-        color: userColor,
-        updatedAt: Date.now()
-      });
-
-      await database.ref('activeUsers/' + userId).set({
-        nickname: userNickname,
-        color: userColor,
-        timestamp: Date.now()
-      });
-      database.ref('activeUsers/' + userId).onDisconnect().remove();
-
-      showChat();
-      refreshNotifHintVisibility();
+      alert("Esse apelido já existe. Escolha outro.");
+      return;
     }
+  }
+
+  userNickname = nickname;
+
+  const snapshot = await database.ref('activeUsers').once('value');
+  const activeUsers = snapshot.val() || {};
+  const usedColors = Object.values(activeUsers).map(u => u.color);
+
+  let availableColors = colors.filter(c => !usedColors.includes(c));
+  if (availableColors.length === 0) availableColors = colors;
+  userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+
+  localStorage.setItem('chatNickname', userNickname);
+  localStorage.setItem('chatColor', userColor);
+
+  await database.ref(`users/${userId}/profile`).set({
+    nickname: userNickname,
+    color: userColor,
+    updatedAt: Date.now()
+  });
+
+  await database.ref('activeUsers/' + userId).set({
+    nickname: userNickname,
+    color: userColor,
+    timestamp: Date.now()
+  });
+  database.ref('activeUsers/' + userId).onDisconnect().remove();
+
+  showChat();
+  refreshNotifHintVisibility();
+}
+
 
     function showChat() {
       document.getElementById('nicknameScreen').classList.add('hidden');
