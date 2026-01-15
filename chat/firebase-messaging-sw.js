@@ -83,22 +83,28 @@ self.addEventListener("notificationclick", (event) => {
   
   event.waitUntil((async () => {
     const allClients = await clients.matchAll({ 
-      type: "window", 
-      includeUncontrolled: true 
+      type: "window",
+      includeUncontrolled: true
     });
     
-    // Focus existing chat window if found
+    // First try to find an existing chat window (browser or PWA)
     for (const c of allClients) {
       if (c.url.includes("/chat")) {
         return c.focus();
       }
     }
     
-    // Otherwise open new window
-    return clients.openWindow("/chat");
+    // If no existing window, try to open in PWA
+    // Check if running as PWA
+    if (self.registration.scope.includes("chat")) {
+      // We're in the chat PWA scope, open chat page
+      return clients.openWindow("/chat");
+    } else {
+      // Fallback to opening chat
+      return clients.openWindow("/chat");
+    }
   })());
 });
-
 // Reset count when user opens the chat
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "CHAT_OPENED") {
