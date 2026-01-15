@@ -37,16 +37,32 @@ exports.notifyOnNewMessage = onValueCreated("/messages/{id}", async (event) => {
     "Nova mensagem";
 
   // IMPORTANT: DATA ONLY (no notification/webpush.notification)
-  const multicast = {
-    tokens,
-    data: {
-      title,
-      body,
-      url: "/chat/",
-      messageId,
-      senderUid
+const multicast = {
+  tokens,
+  data: {
+    title,
+    body,
+    url: "/chat/",
+    messageId,
+    senderUid
+  },
+  // Add Android specific config
+  android: {
+    priority: "high",
+    notification: {
+      click_action: "/chat/",
+      tag: "chat-messages"
     }
+  },
+  // Add web push config
+  webpush: {
+    fcm_options: {
+      link: "/chat/"
+    }
+  }
   };
+
+  
 
   const resp = await admin.messaging().sendEachForMulticast(multicast);
 
