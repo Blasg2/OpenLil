@@ -112,7 +112,7 @@
             margin-right: 5px;
         }
 
-        /* PWA INSTALL BUTTON */
+        /* PWA INSTALL BUTTON (Chrome only) */
         #installBtn {
             display: none;
             width: 100%;
@@ -129,6 +129,9 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
         #installBtn::before {
@@ -149,6 +152,27 @@
         #installBtn:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(245, 87, 108, 0.5);
+        }
+
+        #installBtn img {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+        }
+
+        /* FIREFOX & SAFARI INSTALL INSTRUCTIONS */
+        .browser-install-guide {
+            display: none;
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .browser-install-guide img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         }
 
         /* OPEN CHAT BUTTON */
@@ -172,101 +196,91 @@
         }
 
         /* CHAT IFRAME MODAL */
+        #chatIframeOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #chatIframeOverlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         #chatIframeModal {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0.9);
-    width: 95%;
-    max-width: 500px;
-    height: 90vh;
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    z-index: 9999;
-    flex-direction: column;
-    opacity: 0;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 95%;
+            max-width: 500px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 9999;
+            flex-direction: column;
+            opacity: 0;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
 
-#chatIframeModal.active {
-    display: flex;
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-}
+        #chatIframeModal.active {
+            display: flex;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
 
-#chatIframeHeader {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 15px 20px;
-    font-weight: bold;
-    font-size: 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-shrink: 0;
-}
+        #chatIframeHeader {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
 
-#closeChatIframeBtn {
-    background: #ff4444;
-    border: none;
-    color: white;
-    font-size: 28px;
-    font-weight: bold;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    padding: 0;
-    box-shadow: 0 3px 10px rgba(255, 68, 68, 0.4);
-    transition: all 0.2s ease;
-}
+        #closeChatIframeBtn {
+            background: #ff4444;
+            border: none;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+            box-shadow: 0 3px 10px rgba(255, 68, 68, 0.4);
+            transition: all 0.2s ease;
+        }
 
-/* Mobile specific adjustments */
-@media (max-width: 900px) {
-    #chatIframeModal {
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        border-radius: 0;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        transform: translateY(100%);
-        position: fixed;
-    }
-    
-    #chatIframeModal.active {
-        transform: translateY(0);
-    }
-    
-    #chatIframeHeader {
-        padding: 12px 15px;
-        font-size: 16px;
-    }
-    
-    #closeChatIframeBtn {
-        width: 36px;
-        height: 36px;
-        font-size: 24px;
-    }
-    
-    #chatIframe {
-        flex: 1;
-        border: none;
-        width: 100%;
-        height: 100%;
-        /* Allow iframe to resize when keyboard appears */
-        min-height: 0;
-    }
-}
+        #closeChatIframeBtn:hover {
+            background: #cc0000;
+            transform: scale(1.1);
+        }
+
+        #chatIframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
         
         p {
             color: #666;
@@ -589,47 +603,6 @@
             right: calc(100% + 15px);
         }
 
-
-@media (max-width: 900px) {
-    #chatIframeModal {
-        width: 100%;
-        height: 100%;
-        max-width: none;
-        border-radius: 0;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        transform: translateY(100%);
-        position: fixed;
-        /* Account for browser bottom bars */
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    
-    #chatIframeModal.active {
-        transform: translateY(0);
-    }
-    
-    #chatIframeHeader {
-        padding: 12px 15px;
-        font-size: 16px;
-    }
-    
-    #closeChatIframeBtn {
-        width: 36px;
-        height: 36px;
-        font-size: 24px;
-    }
-    
-    #chatIframe {
-        flex: 1;
-        border: none;
-        width: 100%;
-        height: 100%;
-        min-height: 0;
-    }
-}
-
         @media (max-width: 1650px) and (min-width: 901px) {
             .decoration-image {
                 width: 180px;
@@ -759,6 +732,43 @@
             .mobile-decorations img:hover {
                 transform: scale(1.05);
             }
+
+            /* Mobile iframe adjustments */
+            #chatIframeModal {
+                width: 100%;
+                height: 100%;
+                max-width: none;
+                border-radius: 0;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                transform: translateY(100%);
+                position: fixed;
+            }
+            
+            #chatIframeModal.active {
+                transform: translateY(0);
+            }
+            
+            #chatIframeHeader {
+                padding: 12px 15px;
+                font-size: 16px;
+            }
+            
+            #closeChatIframeBtn {
+                width: 36px;
+                height: 36px;
+                font-size: 24px;
+            }
+            
+            #chatIframe {
+                flex: 1;
+                border: none;
+                width: 100%;
+                height: 100%;
+                min-height: 0;
+            }
         }
 
         @media (max-width: 400px) {
@@ -857,10 +867,23 @@
                 </div>
             </div>
 
-            <!-- PWA INSTALL BUTTON -->
+            <!-- PWA INSTALL BUTTON (Chrome only) -->
             <button id="installBtn">
-                📱 Download Lil's Chat App!
+                <img src="images/icon192.png" alt="icon">
+                Download
+                <img src="images/icon192.png" alt="icon">
+                Lil's Chat App!
             </button>
+
+            <!-- FIREFOX INSTALL GUIDE -->
+            <div id="firefoxGuide" class="browser-install-guide">
+                <img src="images/firefoxTutorial.png" alt="Firefox installation guide">
+            </div>
+
+            <!-- SAFARI INSTALL GUIDE -->
+            <div id="safariGuide" class="browser-install-guide">
+                <img src="images/safariTutorial.png" alt="Safari installation guide">
+            </div>
 
             <!-- OPEN CHAT BUTTON -->
             <button id="openChatBtn" onclick="openChatIframe()">Abrir o chat</button>
@@ -921,6 +944,25 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
+        // ==========================================
+        // BROWSER DETECTION & PWA BUTTON
+        // ==========================================
+        function detectBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            const isFirefox = ua.includes('firefox');
+            const isSafari = ua.includes('safari') && !ua.includes('chrome');
+            const isChrome = ua.includes('chrome') && !ua.includes('edg');
+
+            if (isFirefox) {
+                document.getElementById('firefoxGuide').style.display = 'block';
+            } else if (isSafari) {
+                document.getElementById('safariGuide').style.display = 'block';
+            }
+            // Chrome will show install button via beforeinstallprompt
+        }
+
+        detectBrowser();
+
         // ==========================================
         // MINIGAME SYSTEM
         // ==========================================
@@ -1062,7 +1104,7 @@
         // ==========================================
         // COUNTDOWN TIMER
         // ==========================================
-        const targetDate = new Date('2026-01-15T15:40:00').getTime();
+        const targetDate = new Date('2026-01-18T18:30:00').getTime();
         
         function updateCountdown() {
             const now = new Date().getTime();
@@ -1257,24 +1299,19 @@
         // ==========================================
         // CHAT IFRAME MODAL
         // ==========================================
-     function openChatIframe() {
-    const overlay = document.getElementById('chatIframeOverlay');
-    const modal = document.getElementById('chatIframeModal');
-    const iframe = document.getElementById('chatIframe');
-    
-    // Load iframe src
-    iframe.src = '/chat';
-    console.log('Iframe src set to:', iframe.src); // DEBUG
-    
-    // Add load listener to see if it loads
-    iframe.onload = () => console.log('Iframe loaded!'); // DEBUG
-    iframe.onerror = () => console.error('Iframe failed to load!'); // DEBUG
-    
-    document.body.classList.add('modal-open');
-    overlay.classList.add('active');
-    modal.classList.add('active');
-}
-
+        function openChatIframe() {
+            const overlay = document.getElementById('chatIframeOverlay');
+            const modal = document.getElementById('chatIframeModal');
+            const iframe = document.getElementById('chatIframe');
+            
+            if (!iframe.src) {
+                iframe.src = '/chat';
+            }
+            
+            document.body.classList.add('modal-open');
+            overlay.classList.add('active');
+            modal.classList.add('active');
+        }
 
         function closeChatIframe() {
             const overlay = document.getElementById('chatIframeOverlay');
@@ -1326,7 +1363,7 @@
         window.addEventListener("beforeinstallprompt", (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById("installBtn").style.display = "inline-block";
+            document.getElementById("installBtn").style.display = "flex";
         });
 
         document.getElementById("installBtn").addEventListener("click", async () => {
@@ -1334,6 +1371,7 @@
             deferredPrompt.prompt();
             await deferredPrompt.userChoice;
             deferredPrompt = null;
+            document.getElementById("installBtn").style.display = "none";
         });
     </script>
     
