@@ -17,7 +17,7 @@ const messaging = firebase.messaging();
 // Track notification state
 let notificationCount = 0;
 let lastNotificationTime = 0;
-const NOTIFICATION_TIMEOUT = 5000; // Reset count after 5 seconds of no new messages
+const NOTIFICATION_TIMEOUT = 5000;
 
 // Background push display
 messaging.onBackgroundMessage(async (payload) => {
@@ -34,8 +34,6 @@ messaging.onBackgroundMessage(async (payload) => {
   notificationCount++;
   lastNotificationTime = now;
   
-  // First notification: sound + vibration
-  // Subsequent: silent, replace previous
   const isFirstNotification = notificationCount === 1;
   
   // Get existing notifications to close them
@@ -46,21 +44,29 @@ messaging.onBackgroundMessage(async (payload) => {
   // Close all existing chat notifications
   existingNotifications.forEach(n => n.close());
   
+  // Build notification body text
+  const notificationBody = notificationCount > 1 
+    ? `${body}\n+${notificationCount - 1} ${notificationCount === 2 ? 'mensagem' : 'mensagens'}` 
+    : body;
+  
   // Build notification options
   const options = {
-    body: notificationCount > 1 
-      ? `${notificationCount} novas mensagens` 
-      : body,
+    body: notificationBody,
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: "chat-messages", // Same tag = replaces previous notification
-    renotify: isFirstNotification, // Only alert on first
+    tag: "chat-messages",
+    renotify: isFirstNotification,
     requireInteraction: false,
-    silent: !isFirstNotification, // Silent for subsequent notifications
-    vibrate: isFirstNotification ? [200, 100, 200] : undefined, // Vibrate only first time
+    silent: !isFirstNotification,
+    vibrate: isFirstNotification ? [200, 100, 200] : undefined,
+    timestamp: now, // Force fresh timestamp
+    actions: [
+      { action: "open", title: "Abrir" }
+    ],
     data: {
       url: "/chat",
       count: notificationCount,
+      timestamp: now,
       ...(payload?.data || {})
     }
   };
