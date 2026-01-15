@@ -29,21 +29,6 @@
       -webkit-touch-callout: none !important;
     }
 
-    /* Boot overlay to avoid nickname screen flashing */
-    #bootOverlay {
-      position: fixed;
-      inset: 0;
-      background: #0a0a0a;
-      z-index: 20000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ddd;
-      font-size: 14px;
-      letter-spacing: 0.2px;
-    }
-    #bootOverlay.hidden { display: none; }
-
     /* HEADER */
     #chatHeader {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -51,7 +36,7 @@
       padding: 15px 20px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       z-index: 100;
     }
@@ -59,24 +44,7 @@
     #chatTitle h1 { font-size: 18px; font-weight: 600; }
     #chatTitle p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
 
-    /* red notif hint */
-    #notifHint {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 35, 35, 0.95);
-      color: #fff;
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 700;
-      white-space: nowrap;
-      box-shadow: 0 8px 22px rgba(0,0,0,0.35);
-    }
-    #notifHint.show { display: inline-flex; }
-    #notifHint .arrow { font-weight: 900; opacity: 0.95; }
-
-    /* bell */
+    /* small bell */
     #pushBtn {
       width: 40px;
       height: 40px;
@@ -136,31 +104,15 @@
       cursor: pointer;
     }
 
-    /* CHAT SCREEN */
-    #chatScreen { display: none; flex-direction: column; height: 100vh; }
-    #chatScreen.active { display: flex; }
-
-    /* MESSAGES AREA (oldest top, newest bottom) */
+    /* MESSAGES AREA */
     #messagesContainer {
       flex: 1;
       overflow-y: auto;
       padding: 15px;
       background: #0a0a0a;
       display: flex;
-      flex-direction: column;
+      flex-direction: column-reverse;
     }
-
-    /* "loading older..." hint */
-    #olderLoading {
-      display: none;
-      text-align: center;
-      color: #aaa;
-      font-size: 12px;
-      padding: 8px 0 10px 0;
-      opacity: 0.9;
-    }
-    #olderLoading.active { display: block; }
-
     .message { margin-bottom: 12px; animation: slideIn 0.2s ease; }
     @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -175,7 +127,6 @@
       -webkit-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
-
       touch-action: pan-y;
     }
     .message-bubble * {
@@ -202,7 +153,6 @@
       margin-top: 5px;
       cursor: pointer;
       display: block;
-
       -webkit-user-drag: none;
       user-drag: none;
     }
@@ -214,7 +164,6 @@
       text-align: right;
     }
 
-    /* Reply preview */
     .reply-preview {
       background: rgba(255,255,255,0.06);
       border-left: 3px solid #667eea;
@@ -247,7 +196,6 @@
       flex-shrink: 0;
       border: 1px solid rgba(255,255,255,0.10);
       background: rgba(255,255,255,0.05);
-
       -webkit-user-drag: none;
       user-drag: none;
     }
@@ -272,8 +220,6 @@
       gap: 8px;
       align-items: flex-end;
       border-top: 1px solid #2a2a2a;
-      position: relative;
-      z-index: 120;
     }
 
     #imageBtn, #sendBtn {
@@ -304,23 +250,20 @@
       resize: none;
     }
 
-    /* Upload status above input */
     #uploadStatus {
       position: fixed;
+      top: 70px;
       left: 50%;
       transform: translateX(-50%);
-      bottom: 86px;
       background: #667eea;
       color: white;
-      padding: 10px 16px;
-      border-radius: 18px;
+      padding: 10px 20px;
+      border-radius: 20px;
       font-size: 14px;
       z-index: 1000;
       display: none;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
     }
 
-    /* Reply bar above input */
     #replyBar {
       display: none;
       align-items: center;
@@ -328,7 +271,6 @@
       padding: 10px 12px;
       background: #141414;
       border-top: 1px solid #2a2a2a;
-      z-index: 120;
     }
     #replyBar.active { display: flex; }
 
@@ -368,26 +310,6 @@
       flex-shrink: 0;
     }
 
-    /* Scroll-to-bottom button */
-    #scrollToBottomBtn {
-      position: fixed;
-      right: 16px;
-      bottom: 96px; /* above input */
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      border: none;
-      background: rgba(102,126,234,0.92);
-      color: #fff;
-      font-size: 20px;
-      cursor: pointer;
-      display: none;
-      z-index: 1500;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.45);
-    }
-    #scrollToBottomBtn.show { display: block; }
-    #scrollToBottomBtn:active { transform: scale(0.98); opacity: 0.95; }
-
     /* LIGHTBOX */
     #lightbox {
       display: none;
@@ -414,6 +336,9 @@
       font-size: 24px;
       cursor: pointer;
     }
+
+    #chatScreen { display: none; flex-direction: column; height: 100vh; }
+    #chatScreen.active { display: flex; }
 
     /* IMAGE SOURCE MODAL */
     #imageSourceModal {
@@ -525,8 +450,6 @@
 </head>
 
 <body>
-  <div id="bootOverlay">Carregando…</div>
-
   <!-- LIGHTBOX -->
   <div id="lightbox" onclick="closeLightbox()">
     <button id="closeLightbox">×</button>
@@ -549,7 +472,7 @@
   <input type="file" id="galleryInput" accept="image/*" style="display:none"
          onchange="handleImageSelect(event)">
 
-  <!-- Message action popup -->
+  <!-- Message action popup (reply) -->
   <div id="msgActionModal" onclick="closeMsgActions()">
     <div class="msg-action-sheet" onclick="event.stopPropagation()">
       <div class="msg-action-preview">
@@ -582,16 +505,14 @@
         <p>Chat ao vivo</p>
       </div>
 
-      <div id="notifHint"><span>Clique para ativar notificações</span> <span class="arrow">→</span></div>
-
+      <!-- NEW: notifications button -->
       <button id="pushBtn" title="Ativar notificações" onclick="enableNotifications()">🔔</button>
     </div>
 
     <div id="uploadStatus"></div>
-
-    <div id="olderLoading">Carregando mensagens antigas…</div>
     <div id="messagesContainer"></div>
 
+    <!-- Reply bar -->
     <div id="replyBar">
       <div id="replyBarLeft">
         <div id="replyBarTitle">Respondendo</div>
@@ -607,12 +528,11 @@
     </div>
   </div>
 
-  <!-- Scroll-to-bottom button -->
-  <button id="scrollToBottomBtn" title="Ir para o final" onclick="jumpToBottom()">↓</button>
-
-  <!-- Firebase compat -->
+  <!-- Firebase compat (you already use these) -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <!-- auth + messaging compat -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
 
@@ -632,9 +552,9 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // FCM
+    // FCM (web push)
     const messaging = firebase.messaging();
-    const VAPID_PUBLIC_KEY = "BEosaFitBubtud4pjzqWwzjldLIUyoI0W2-51bM17I0Cww0A3gG3HtQTWMaXUCoxHS4tO0OZp-q_1k_aVaUukgE";
+    const VAPID_PUBLIC_KEY = "BEosaFitBubtud4pjzqWwzjldLIUUyoI0W2-51bM17I0Cww0A3gG3HtQTWMaXUCoxHS4tO0OZp-q_1k_aVaUukgE";
 
     const messagesRef = database.ref('messages');
     const IMGBB_API_KEY = '18ab4a20c315acaf53a635943d332eba';
@@ -642,24 +562,13 @@
     let userNickname = null;
     let userColor = null;
 
+    // userId comes from Firebase Auth UID
     let userId = null;
     let authReady = false;
 
+    // Reply state
     let replyTarget = null;
     let actionTarget = null;
-
-    // Paging + loaded tracking
-    const PAGE_SIZE = 60;
-    let oldestTs = null;
-    let newestTs = 0;
-    let isLoadingOlder = false;
-    const loadedMessageIds = new Set();
-    let newMsgListenerQuery = null;
-
-    // Scroll button logic
-    const SCROLL_BOTTOM_THRESHOLD_PX = 220; // when farther than this from bottom -> show btn
-
-    const NOTIF_HINT_KEY = "notifHintDismissed";
 
     const colors = [
       '#FF6B6B', '#E74C3C', '#C0392B', '#E74292', '#FF1744',
@@ -681,6 +590,7 @@
       '#673AB7', '#5E35B1', '#512DA8', '#4527A0', '#311B92'
     ];
 
+    // Prevent native context menus on bubbles
     document.addEventListener('contextmenu', (e) => {
       if (e.target.closest('.message-bubble') || e.target.closest('.reply-preview') || e.target.closest('.msg-action-sheet')) {
         e.preventDefault();
@@ -711,37 +621,6 @@
       };
     }
 
-    function setOlderLoading(isOn) {
-      document.getElementById('olderLoading').classList.toggle('active', !!isOn);
-    }
-
-    function showScrollBtn(show) {
-      document.getElementById('scrollToBottomBtn').classList.toggle('show', !!show);
-    }
-
-    function distanceFromBottom(container) {
-      return (container.scrollHeight - (container.scrollTop + container.clientHeight));
-    }
-
-    function jumpToBottom() {
-      const c = document.getElementById('messagesContainer');
-      c.scrollTop = c.scrollHeight;
-      showScrollBtn(false);
-    }
-
-    function hideNotifHintForever() {
-      localStorage.setItem(NOTIF_HINT_KEY, "1");
-      document.getElementById('notifHint').classList.remove('show');
-    }
-
-    function refreshNotifHintVisibility() {
-      const dismissed = localStorage.getItem(NOTIF_HINT_KEY) === "1";
-      // If already granted, don't show the hint either.
-      const alreadyGranted = ("Notification" in window) && Notification.permission === "granted";
-      const shouldShow = !dismissed && !alreadyGranted;
-      document.getElementById('notifHint').classList.toggle('show', shouldShow);
-    }
-
     // ========= AUTH BOOTSTRAP =========
     async function ensureAnonAuth() {
       if (auth.currentUser) return auth.currentUser;
@@ -755,6 +634,7 @@
         const nick = (snap.val() || '').trim();
         if (nick) return nick;
       } catch {}
+
       const localNick = (localStorage.getItem('chatNickname') || '').trim();
       if (localNick) return localNick;
       return null;
@@ -766,11 +646,6 @@
     }
 
     async function boot() {
-      // main SW (simple)
-      if ("serviceWorker" in navigator) {
-        try { await navigator.serviceWorker.register("/sw.js"); } catch {}
-      }
-
       const user = await ensureAnonAuth();
       userId = user.uid;
       authReady = true;
@@ -788,20 +663,13 @@
 
         showChat();
       } else {
-        document.getElementById('nicknameScreen').classList.remove('hidden');
+        // show nickname screen (default)
       }
-
-      document.getElementById('bootOverlay').classList.add('hidden');
-
-      // now that UI exists, show/hide notif hint
-      refreshNotifHintVisibility();
     }
 
-    boot().catch((e) => {
-      console.error(e);
-      document.getElementById('bootOverlay').textContent = "Erro ao carregar.";
-    });
+    boot().catch(console.error);
 
+    // ========= ENTER CHAT =========
     async function enterChat() {
       if (!authReady || !userId) {
         alert("Auth ainda não carregou. Tenta de novo em 1s.");
@@ -810,6 +678,7 @@
 
       const input = document.getElementById('nicknameInput');
       const nickname = input.value.trim();
+
       if (nickname.length < 2) {
         alert('Apelido deve ter pelo menos 2 caracteres!');
         return;
@@ -823,6 +692,7 @@
 
       let availableColors = colors.filter(c => !usedColors.includes(c));
       if (availableColors.length === 0) availableColors = colors;
+
       userColor = availableColors[Math.floor(Math.random() * availableColors.length)];
 
       localStorage.setItem('chatNickname', userNickname);
@@ -839,17 +709,17 @@
         color: userColor,
         timestamp: Date.now()
       });
+
       database.ref('activeUsers/' + userId).onDisconnect().remove();
 
       showChat();
-      refreshNotifHintVisibility();
     }
 
     function showChat() {
       document.getElementById('nicknameScreen').classList.add('hidden');
       document.getElementById('chatScreen').classList.add('active');
 
-      initMessagesPaging();
+      loadMessages();
 
       const textarea = document.getElementById('messageInput');
       textarea.addEventListener('input', () => {
@@ -865,113 +735,24 @@
       });
     }
 
-    // ========= MESSAGES: PAGING =========
-    async function initMessagesPaging() {
+    function loadMessages() {
+      messagesRef.orderByChild('timestamp').limitToLast(100).on('value', (snapshot) => {
+        const messages = [];
+        snapshot.forEach((child) => {
+          messages.push({ id: child.key, ...child.val() });
+        });
+        displayMessages(messages);
+      });
+    }
+
+    function displayMessages(messages) {
       const container = document.getElementById('messagesContainer');
       container.innerHTML = '';
-      loadedMessageIds.clear();
-      oldestTs = null;
-      newestTs = 0;
 
-      container.addEventListener('scroll', () => {
-        // Infinite older load (more forgiving than == 0)
-        if (container.scrollTop <= 10) {
-          loadOlderMessages();
-        }
-
-        // Scroll-to-bottom button visibility
-        const dist = distanceFromBottom(container);
-        showScrollBtn(dist > SCROLL_BOTTOM_THRESHOLD_PX);
+      messages.reverse().forEach(msg => {
+        const msgEl = createMessageElement(msg);
+        container.appendChild(msgEl);
       });
-
-      const snap = await messagesRef.orderByChild('timestamp').limitToLast(PAGE_SIZE).once('value');
-      const msgs = [];
-      snap.forEach((child) => msgs.push({ id: child.key, ...child.val() }));
-      msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-
-      msgs.forEach(m => appendMessage(m, false));
-
-      if (msgs.length) {
-        oldestTs = msgs[0].timestamp;
-        newestTs = msgs[msgs.length - 1].timestamp || 0;
-      }
-
-      // First open: go to bottom once
-      container.scrollTop = container.scrollHeight;
-      showScrollBtn(false);
-
-      startNewMessageListener();
-    }
-
-    function startNewMessageListener() {
-      if (newMsgListenerQuery) newMsgListenerQuery.off('child_added');
-      newMsgListenerQuery = messagesRef.orderByChild('timestamp').startAt(newestTs);
-
-      newMsgListenerQuery.on('child_added', (child) => {
-        const msg = { id: child.key, ...child.val() };
-        if (!msg || loadedMessageIds.has(msg.id)) return;
-
-        if ((msg.timestamp || 0) > newestTs) newestTs = msg.timestamp || newestTs;
-
-        // Append but DO NOT autoscroll (unless user is near bottom already)
-        const container = document.getElementById('messagesContainer');
-        const wasNearBottom = distanceFromBottom(container) <= SCROLL_BOTTOM_THRESHOLD_PX;
-
-        appendMessage(msg, false);
-
-        if (wasNearBottom) {
-          container.scrollTop = container.scrollHeight;
-          showScrollBtn(false);
-        } else {
-          showScrollBtn(true);
-        }
-      });
-    }
-
-    async function loadOlderMessages() {
-      if (isLoadingOlder) return;
-      if (!oldestTs) return;
-
-      isLoadingOlder = true;
-      setOlderLoading(true);
-
-      const container = document.getElementById('messagesContainer');
-      const prevScrollHeight = container.scrollHeight;
-
-      const olderSnap = await messagesRef
-        .orderByChild('timestamp')
-        .endAt(oldestTs - 1)
-        .limitToLast(PAGE_SIZE)
-        .once('value');
-
-      const older = [];
-      olderSnap.forEach((child) => older.push({ id: child.key, ...child.val() }));
-      older.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-
-      if (older.length) {
-        older.forEach(m => appendMessage(m, true));
-        oldestTs = older[0].timestamp || oldestTs;
-
-        // Keep view stable
-        const newScrollHeight = container.scrollHeight;
-        const diff = newScrollHeight - prevScrollHeight;
-        container.scrollTop = diff;
-      }
-
-      setOlderLoading(false);
-      isLoadingOlder = false;
-    }
-
-    function appendMessage(msg, prepend) {
-      if (!msg || !msg.id) return;
-      if (loadedMessageIds.has(msg.id)) return;
-      loadedMessageIds.add(msg.id);
-
-      const el = createMessageElement(msg);
-      const container = document.getElementById('messagesContainer');
-
-      if (prepend) container.insertBefore(el, container.firstChild);
-      else container.appendChild(el);
     }
 
     function scrollToMessage(messageId) {
@@ -980,6 +761,7 @@
       if (!el) return;
 
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
       el.classList.remove('highlight');
       void el.offsetWidth;
       el.classList.add('highlight');
@@ -1049,7 +831,6 @@
       return div;
     }
 
-    // ========= SEND MESSAGE (If YOU sent -> scroll bottom) =========
     function sendMessage() {
       const input = document.getElementById('messageInput');
       const message = input.value.trim();
@@ -1077,7 +858,7 @@
         message: transformed,
         color: userColor,
         timestamp: Date.now(),
-        transformedIndices
+        transformedIndices: transformedIndices
       };
 
       if (replyTarget) {
@@ -1094,11 +875,12 @@
 
       input.value = '';
       input.style.height = 'auto';
-      input.focus();
-      cancelReply();
 
-      // YOU sent => scroll to bottom
-      jumpToBottom();
+      const container = document.getElementById('messagesContainer');
+      container.scrollTop = 0;
+      input.focus();
+
+      cancelReply();
     }
 
     async function handleImageSelect(event) {
@@ -1140,20 +922,21 @@
         await messagesRef.push(payload);
 
         status.textContent = 'Enviado!';
-        setTimeout(() => status.style.display = 'none', 1600);
+        setTimeout(() => status.style.display = 'none', 2000);
+
+        const container = document.getElementById('messagesContainer');
+        container.scrollTop = 0;
 
         cancelReply();
-
-        // YOU sent image => scroll to bottom
-        jumpToBottom();
       } catch (error) {
         status.textContent = 'Erro no envio';
-        setTimeout(() => status.style.display = 'none', 2500);
+        setTimeout(() => status.style.display = 'none', 3000);
       }
 
       event.target.value = '';
     }
 
+    <!-- ONLY CHANGE BELOW: compressImage now watermarks bottom-left -->
     async function compressImage(file, maxSize) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -1161,26 +944,85 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            let w = img.width, h = img.height;
+            let width = img.width;
+            let height = img.height;
 
-            if (w > 1920 || h > 1920) {
-              if (w > h) { h = (h/w)*1920; w = 1920; }
-              else { w = (w/h)*1920; h = 1920; }
+            const maxDimension = 1920;
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = (height / width) * maxDimension;
+                width = maxDimension;
+              } else {
+                width = (width / height) * maxDimension;
+                height = maxDimension;
+              }
             }
 
-            canvas.width = w;
-            canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            canvas.width = width;
+            canvas.height = height;
 
-            let q = 0.9;
-            const compress = () => canvas.toBlob(b => {
-              if (b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
-              else resolve(new File([b], file.name, {type: 'image/jpeg'}));
-            }, 'image/jpeg', q);
-            compress();
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Load the watermark image (same logic as your main index.html)
+            const watermark = new Image();
+            watermark.onload = () => {
+              // Watermark size (15% of image size)
+              const wmSize = Math.min(width, height) * 0.15;
+              const wmWidth = wmSize;
+              const wmHeight = wmSize;
+
+              // Position: bottom-left with 10px padding (requested)
+              const wmX = 10;
+              const wmY = height - wmHeight - 10;
+
+              // Draw watermark with 50% opacity
+              ctx.globalAlpha = 0.5;
+              ctx.drawImage(watermark, wmX, wmY, wmWidth, wmHeight);
+              ctx.globalAlpha = 1.0;
+
+              // Compress and return
+              let quality = 0.9;
+              const tryCompress = () => {
+                canvas.toBlob((b) => {
+                  if (!b) return reject(new Error('toBlob failed'));
+                  if (b.size > maxSize && quality > 0.1) {
+                    quality -= 0.1;
+                    tryCompress();
+                  } else {
+                    resolve(new File([b], file.name, { type: 'image/jpeg' }));
+                  }
+                }, 'image/jpeg', quality);
+              };
+
+              tryCompress();
+            };
+
+            // If watermark fails to load, still compress without it
+            watermark.onerror = () => {
+              let quality = 0.9;
+              const tryCompress = () => {
+                canvas.toBlob((b) => {
+                  if (!b) return reject(new Error('toBlob failed'));
+                  if (b.size > maxSize && quality > 0.1) {
+                    quality -= 0.1;
+                    tryCompress();
+                  } else {
+                    resolve(new File([b], file.name, { type: 'image/jpeg' }));
+                  }
+                }, 'image/jpeg', quality);
+              };
+              tryCompress();
+            };
+
+            // IMPORTANT: put your watermark file here (same file you use on the main page)
+            // If your images folder is at site root, keep it like this:
+            watermark.src = '/images/TimeLilPixel.png';
           };
+          img.onerror = reject;
           img.src = e.target.result;
         };
+        reader.onerror = reject;
         reader.readAsDataURL(file);
       });
     }
@@ -1196,11 +1038,11 @@
       document.getElementById('lightboxImage').src = url;
       document.getElementById('lightbox').classList.add('active');
     }
+
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('active');
     }
 
-    /* CAMERA/GALLERY */
     function openImageSource() {
       document.getElementById('imageSourceModal').classList.add('active');
       document.body.classList.add('modal-open');
@@ -1213,6 +1055,7 @@
 
       modal.classList.remove('active');
       document.body.classList.remove('modal-open');
+
       if (!fromPopState) history.back();
     }
 
@@ -1238,7 +1081,6 @@
       }
     });
 
-    /* REPLY SYSTEM */
     function attachLongPressForReply(bubbleEl) {
       let pressTimer = null;
       let startX = 0, startY = 0;
@@ -1258,6 +1100,7 @@
         startX = clientX;
         startY = clientY;
         longPressFired = false;
+
         document.body.classList.add('no-select');
 
         pressTimer = setTimeout(() => {
@@ -1356,11 +1199,7 @@
       document.getElementById('replyBar').classList.remove('active');
     }
 
-    // ========= PUSH =========
     async function enableNotifications() {
-      // per your request: clicking bell once hides warning forever
-      hideNotifHintForever();
-
       if (!authReady || !userId) {
         alert("Auth ainda não carregou.");
         return;
@@ -1377,33 +1216,35 @@
         return;
       }
 
-      let fcmSwReg = null;
-      try {
-        fcmSwReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
-      } catch (e) {
-        console.error(e);
-        alert("Erro registrando SW de push.");
-        return;
-      }
+      const swReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
 
-      const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: fcmSwReg });
+      const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: swReg });
       if (!token) {
         alert("Não consegui gerar o token de push.");
         return;
       }
 
       await database.ref(`fcmTokens/${userId}/${token}`).set(true);
+
       alert("Notificações ativadas!");
     }
 
     messaging.onMessage((payload) => {
-      // optional: in-app toast
+      // foreground handler (optional)
     });
 
-    // Keep hint updated if permission changes while open
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refreshNotifHintVisibility();
-    });
+    let swReg = null;
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        try {
+          swReg = await navigator.serviceWorker.register("/sw.js");
+          console.log("SW registered:", swReg.scope);
+        } catch (e) {
+          console.error("SW register failed:", e);
+        }
+      });
+    }
   </script>
 </body>
 </html>
