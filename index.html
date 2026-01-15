@@ -172,97 +172,90 @@
         }
 
         /* CHAT IFRAME MODAL */
-        #chatIframeOverlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 9998;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
+       #chatIframeModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    width: 95%;
+    max-width: 500px;
+    height: 90vh;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    z-index: 9999;
+    flex-direction: column;
+    opacity: 0;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
 
-        #chatIframeOverlay.active {
-            display: block;
-            opacity: 1;
-        }
+#chatIframeModal.active {
+    display: flex;
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+}
 
-        #chatIframeModal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.9);
-            width: 95%;
-            max-width: 500px;
-            height: 90vh;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            z-index: 9999;
-            flex-direction: column;
-            opacity: 0;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
+#chatIframeHeader {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    font-weight: bold;
+    font-size: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
 
-        #chatIframeModal.active {
-            display: flex;
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
+#closeChatIframeBtn {
+    background: #ff4444;
+    border: none;
+    color: white;
+    font-size: 28px;
+    font-weight: bold;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    box-shadow: 0 3px 10px rgba(255, 68, 68, 0.4);
+    transition: all 0.2s ease;
+}
 
-        #chatIframeHeader {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 20px;
-            font-weight: bold;
-            font-size: 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #closeChatIframeBtn {
-            background: #ff4444;
-            border: none;
-            color: white;
-            font-size: 28px;
-            font-weight: bold;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
-            padding: 0;
-            box-shadow: 0 3px 10px rgba(255, 68, 68, 0.4);
-            transition: all 0.2s ease;
-        }
-
-        #closeChatIframeBtn:hover {
-            background: #cc0000;
-            transform: scale(1.1);
-        }
-
-        #chatIframe {
-            flex: 1;
-            border: none;
-            width: 100%;
-            height: 100%;
-        }
+/* Mobile specific adjustments */
+@media (max-width: 900px) {
+    #chatIframeModal {
+        width: 100%;
+        height: 100vh;
+        max-width: none;
+        border-radius: 0;
+        top: 0;
+        left: 0;
+        transform: translateY(100%);
+    }
+    
+    #chatIframeModal.active {
+        transform: translateY(0);
+    }
+    
+    #chatIframeHeader {
+        padding: 12px 15px;
+        font-size: 16px;
+    }
+    
+    #closeChatIframeBtn {
+        width: 36px;
+        height: 36px;
+        font-size: 24px;
+    }
+}
         
-        p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            text-align: center;
-        }
 
         /* MINIGAME BUTTON */
         #minigameBtn {
