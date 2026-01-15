@@ -112,7 +112,7 @@
             margin-right: 5px;
         }
 
-        /* PWA INSTALL BUTTON */
+        /* PWA INSTALL BUTTON Chrome Only */
         #installBtn {
             display: none;
             width: 100%;
@@ -129,6 +129,9 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
         }
 
         #installBtn::before {
@@ -150,6 +153,28 @@
             transform: translateY(-2px);
             box-shadow: 0 12px 25px rgba(245, 87, 108, 0.5);
         }
+
+      #installBtn img {
+            width: 32px;
+            height: 32px;
+            vertical-align: middle;
+        }
+
+        /* FIREFOX & SAFARI INSTALL INSTRUCTIONS */
+        .browser-install-guide {
+            display: none;
+            width: 100%;
+            margin: 15px 0;
+        }
+
+        .browser-install-guide img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
 
         /* OPEN CHAT BUTTON */
         #openChatBtn {
@@ -870,10 +895,24 @@
                 </div>
             </div>
 
-            <!-- PWA INSTALL BUTTON -->
+            <!-- PWA INSTALL BUTTON Chrome Only -->
             <button id="installBtn">
-                📱 Download Lil's Chat App!
+                <img src="images/icon192.png" alt="icon">
+                Baixe o Lil's Chat App!
+                <img src="images/icon192.png" alt="icon">
             </button>
+
+
+             <!-- FIREFOX INSTALL GUIDE -->
+            <div id="firefoxGuide" class="browser-install-guide">
+                <img src="images/firefoxTutorial.png" alt="Firefox installation guide">
+            </div>
+
+            <!-- SAFARI INSTALL GUIDE -->
+            <div id="safariGuide" class="browser-install-guide">
+                <img src="images/safariTutorial.png" alt="Safari installation guide">
+            </div>
+
 
             <!-- OPEN CHAT BUTTON -->
             <button id="openChatBtn" onclick="openChatIframe()">Abrir o chat</button>
@@ -934,6 +973,26 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
     <script>
+
+// ==========================================
+        // BROWSER DETECTION & PWA BUTTON
+        // ==========================================
+        function detectBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            const isFirefox = ua.includes('firefox');
+            const isSafari = ua.includes('safari') && !ua.includes('chrome');
+            const isChrome = ua.includes('chrome') && !ua.includes('edg');
+
+            if (isFirefox) {
+                document.getElementById('firefoxGuide').style.display = 'block';
+            } else if (isSafari) {
+                document.getElementById('safariGuide').style.display = 'block';
+            }
+            // Chrome will show install button via beforeinstallprompt
+        }
+
+        detectBrowser();
+
         // ==========================================
         // MINIGAME SYSTEM
         // ==========================================
@@ -1075,7 +1134,7 @@
         // ==========================================
         // COUNTDOWN TIMER
         // ==========================================
-        const targetDate = new Date('2026-01-15T15:40:00').getTime();
+        const targetDate = new Date('2026-01-18T18:30:00').getTime();
         
         function updateCountdown() {
             const now = new Date().getTime();
@@ -1339,7 +1398,7 @@
         window.addEventListener("beforeinstallprompt", (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById("installBtn").style.display = "inline-block";
+            document.getElementById("installBtn").style.display = "flex";
         });
 
         document.getElementById("installBtn").addEventListener("click", async () => {
