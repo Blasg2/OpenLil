@@ -864,110 +864,120 @@
         }
       });
     }
+let hasReachedStart = false; // Add this at the top with other variables
 
     // ========= MESSAGES: PAGING =========
     async function initMessagesPaging() {
-      const container = document.getElementById('messagesContainer');
-      container.innerHTML = '';
-      loadedMessageIds.clear();
-      oldestTs = null;
-      newestTs = 0;
-      hasReachedStart = false; // Reset this flag
+  const container = document.getElementById('messagesContainer');
+  container.innerHTML = '';
+  loadedMessageIds.clear();
+  oldestTs = null;
+  newestTs = 0;
+  hasReachedStart = false;
 
-
-      container.addEventListener('scroll', () => {
-        // Infinite older load (more forgiving than == 0)
-        if (container.scrollTop <= 10) {
-          loadOlderMessages();
-        }
-
-        // Scroll-to-bottom button visibility
-        const dist = distanceFromBottom(container);
-        showScrollBtn(dist > SCROLL_BOTTOM_THRESHOLD_PX);
-      });
-
-      const snap = await messagesRef.orderByChild('timestamp').limitToLast(PAGE_SIZE).once('value');
-      const msgs = [];
-      snap.forEach((child) => msgs.push({ id: child.key, ...child.val() }));
-      msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
-
-      msgs.forEach(m => appendMessage(m, false));
-
-      if (msgs.length) {
-        oldestTs = msgs[0].timestamp;
-        newestTs = msgs[msgs.length - 1].timestamp || 0;
-      }
-
-      // First open: go to bottom once
-      container.scrollTop = container.scrollHeight;
-      showScrollBtn(false);
-
-      startNewMessageListener();
+  container.addEventListener('scroll', () => {
+    // Infinite older load (more forgiving than == 0)
+    if (container.scrollTop <= 10 && !isLoadingOlder && !hasReachedStart) {
+      loadOlderMessages();
     }
 
-    function startNewMessageListener() {
-      if (newMsgListenerQuery) newMsgListenerQuery.off('child_added');
-      newMsgListenerQuery = messagesRef.orderByChild('timestamp').startAt(newestTs);
+    // Scroll-to-bottom button visibility
+    const dist = distanceFromBottom(container);
+    showScrollBtn(dist > SCROLL_BOTTOM_THRESHOLD_PX);
+  });
 
-      newMsgListenerQuery.on('child_added', (child) => {
-        const msg = { id: child.key, ...child.val() };
-        if (!msg || loadedMessageIds.has(msg.id)) return;
+  const snap = await messagesRef.orderByChild('timestamp').limitToLast(PAGE_SIZE).once('value');
+  const msgs = [];
+  snap.forEach((child) => msgs.push({ id: child.key, ...child.val() }));
+  msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
 
-        if ((msg.timestamp || 0) > newestTs) newestTs = msg.timestamp || newestTs;
+  msgs.forEach(m => appendMessage(m, false));
 
-        // Append but DO NOT autoscroll (unless user is near bottom already)
-        const container = document.getElementById('messagesContainer');
-        const wasNearBottom = distanceFromBottom(container) <= SCROLL_BOTTOM_THRESHOLD_PX;
+  if (msgs.length) {
+    oldestTs = msgs[0].timestamp;
+    newestTs = msgs[msgs.length - 1].timestamp || 0;
+  }
 
-        appendMessage(msg, false);
+  // First open: go to bottom once
+  setTimeout(() => {
+    container.scrollTop = container.scrollHeight;
+    showScrollBtn(false);
+  }, 100);
 
-        if (wasNearBottom) {
-          container.scrollTop = container.scrollHeight;
-          showScrollBtn(false);
-        } else {
-          showScrollBtn(true);
-        }
-      });
+  startNewMessageListener();
+}
+
+function startNewMessageListener() {
+  if (newMsgListenerQuery) newMsgListenerQuery.off('child_added');
+  
+  // Use startAt(newestTs + 1) to avoid re-including the last loaded message
+  newMsgListenerQuery = messagesRef.orderByChild('timestamp').startAt(newestTs + 1);
+
+  newMsgListenerQuery.on('child_added', (child) => {
+    const msg = { id: child.key, ...child.val() };
+    if (!msg || !msg.id) return;
+    if (loadedMessageIds.has(msg.id)) return;
+
+    if ((msg.timestamp || 0) > newestTs) newestTs = msg.timestamp;
+
+    // Append but DO NOT autoscroll (unless user is near bottom already)
+    const container = document.getElementById('messagesContainer');
+    const wasNearBottom = distanceFromBottom(container) <= SCROLL_BOTTOM_THRESHOLD_PX;
+
+    appendMessage(msg, false);
+
+    if (wasNearBottom) {
+      setTimeout(() => {
+        container.scrollTop = container.scrollHeight;
+        showScrollBtn(false);
+      }, 50);
+    } else {
+      showScrollBtn(true);
     }
+  });
+}
 
-    let hasReachedStart = false; // Add this at the top with other variables
 
   async function loadOlderMessages() {
-  if (isLoadingOlder) return;
-  if (!oldestTs) return;
-  if (hasReachedStart) return; // Stop if we've loaded everything
+  if (isLoadingOlder || !oldestTs || hasReachedStart) return;
 
   isLoadingOlder = true;
   setOlderLoading(true);
 
   const container = document.getElementById('messagesContainer');
   const prevScrollHeight = container.scrollHeight;
+  const prevScrollTop = container.scrollTop;
 
   const olderSnap = await messagesRef
     .orderByChild('timestamp')
-    .endAt(oldestTs - 1)
+    .endBefore(oldestTs)
     .limitToLast(PAGE_SIZE)
     .once('value');
 
   const older = [];
   olderSnap.forEach((child) => older.push({ id: child.key, ...child.val() }));
+  
+  if (older.length === 0) {
+    hasReachedStart = true;
+    setOlderLoading(false);
+    isLoadingOlder = false;
+    return;
+  }
+
   older.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
 
-  if (older.length) {
-    older.forEach(m => appendMessage(m, true));
-    oldestTs = older[0].timestamp || oldestTs;
+  older.forEach(m => appendMessage(m, true));
+  oldestTs = older[0].timestamp;
 
-    // Keep view stable - but ensure we're ABOVE the trigger threshold
+  // Keep scroll position stable + ensure we're above trigger threshold
+  setTimeout(() => {
     const newScrollHeight = container.scrollHeight;
-    const diff = newScrollHeight - prevScrollHeight;
-    container.scrollTop = Math.max(diff, 50); // At least 50px from top
-    
-    // Check if we got fewer messages than requested = we've reached the start
-    if (older.length < PAGE_SIZE) {
-      hasReachedStart = true;
-    }
-  } else {
-    // No more messages
+    const heightDiff = newScrollHeight - prevScrollHeight;
+    container.scrollTop = heightDiff + prevScrollTop;
+  }, 50);
+
+  // If we got fewer messages than requested, we've reached the beginning
+  if (older.length < PAGE_SIZE) {
     hasReachedStart = true;
   }
 
