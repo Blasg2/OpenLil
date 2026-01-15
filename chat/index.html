@@ -10,6 +10,12 @@
   <title>Lil's Life Chat</title>
 
   <style>
+/* Hide header when in iframe */
+body.in-iframe #chatHeader {
+    display: none;
+}
+
+
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
@@ -1473,5 +1479,11 @@ async function loadOlderMessages() {
       if (!document.hidden) refreshNotifHintVisibility();
     });
   </script>
+
+<script>
+if (window.self !== window.top) {
+    document.body.classList.add('in-iframe');
+}
+</script>
 </body>
 </html>
