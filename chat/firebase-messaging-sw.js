@@ -17,7 +17,7 @@ const messaging = firebase.messaging();
 // Track notification state
 let notificationCount = 0;
 let lastNotificationTime = 0;
-const NOTIFICATION_TIMEOUT = 5000;
+const NOTIFICATION_TIMEOUT = 5000; // Reset count after 5 seconds of no new messages
 
 // Background push display
 messaging.onBackgroundMessage(async (payload) => {
@@ -34,6 +34,8 @@ messaging.onBackgroundMessage(async (payload) => {
   notificationCount++;
   lastNotificationTime = now;
   
+  // First notification: sound + vibration
+  // Subsequent: silent, replace previous
   const isFirstNotification = notificationCount === 1;
   
   // Get existing notifications to close them
@@ -44,29 +46,21 @@ messaging.onBackgroundMessage(async (payload) => {
   // Close all existing chat notifications
   existingNotifications.forEach(n => n.close());
   
-  // Build notification body text
-  const notificationBody = notificationCount > 1 
-    ? `${body}\n+${notificationCount - 1} ${notificationCount === 2 ? 'mensagem' : 'mensagens'}` 
-    : body;
-  
   // Build notification options
   const options = {
-    body: notificationBody,
+    body: notificationCount > 1 
+      ? `${notificationCount} novas mensagens` 
+      : body,
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: "chat-messages",
-    renotify: isFirstNotification,
+    tag: "chat-messages", // Same tag = replaces previous notification
+    renotify: isFirstNotification, // Only alert on first
     requireInteraction: false,
-    silent: !isFirstNotification,
-    vibrate: isFirstNotification ? [200, 100, 200] : undefined,
-    timestamp: now, // Force fresh timestamp
-    actions: [
-      { action: "open", title: "Abrir" }
-    ],
+    silent: !isFirstNotification, // Silent for subsequent notifications
+    vibrate: isFirstNotification ? [200, 100, 200] : undefined, // Vibrate only first time
     data: {
       url: "/chat",
       count: notificationCount,
-      timestamp: now,
       ...(payload?.data || {})
     }
   };
@@ -83,28 +77,22 @@ self.addEventListener("notificationclick", (event) => {
   
   event.waitUntil((async () => {
     const allClients = await clients.matchAll({ 
-      type: "window",
-      includeUncontrolled: true
+      type: "window", 
+      includeUncontrolled: true 
     });
     
-    // First try to find an existing chat window (browser or PWA)
+    // Focus existing chat window if found
     for (const c of allClients) {
       if (c.url.includes("/chat")) {
         return c.focus();
       }
     }
     
-    // If no existing window, try to open in PWA
-    // Check if running as PWA
-    if (self.registration.scope.includes("chat")) {
-      // We're in the chat PWA scope, open chat page
-      return clients.openWindow("/chat");
-    } else {
-      // Fallback to opening chat
-      return clients.openWindow("/chat");
-    }
+    // Otherwise open new window
+    return clients.openWindow("/chat");
   })());
 });
+
 // Reset count when user opens the chat
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "CHAT_OPENED") {
