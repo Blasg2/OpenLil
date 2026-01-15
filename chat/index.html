@@ -662,6 +662,12 @@ body.in-iframe #chatHeader {
     const loadedMessageIds = new Set();
     let newMsgListenerQuery = null;
 
+
+        // Tell service worker that chat is open (resets notification count)
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: "CHAT_OPENED" });
+    }
+
     // Scroll button logic
     const SCROLL_BOTTOM_THRESHOLD_PX = 220; // when farther than this from bottom -> show btn
 
