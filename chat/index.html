@@ -1439,6 +1439,9 @@ async function loadOlderMessages() {
 
     // ========= PUSH =========
     async function enableNotifications() {
+  // Keep: clicking bell once hides warning forever
+  hideNotifHintForever();
+
   if (!authReady || !userId) {
     alert("Auth ainda não carregou.");
     return;
@@ -1449,39 +1452,59 @@ async function loadOlderMessages() {
     return;
   }
 
-  // 1) Ask permission
   const perm = await Notification.requestPermission();
   if (perm !== "granted") {
     alert("Permissão negada.");
     return;
   }
 
-  // 2) Register SW and WAIT until it's active/ready
-  let swReg = null;
+  // 1) Register SW for /chat/
+  let fcmSwReg = null;
   try {
-    swReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
+    fcmSwReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
   } catch (e) {
-    console.error("SW register failed:", e);
-    alert("Erro registrando Service Worker de notificações.");
+    console.error("SW register error:", e);
+    alert("Erro registrando SW de push.");
     return;
   }
 
-  // This is the key line: wait until the SW is actually controlling the page
+  // 2) Wait until this SW is ACTIVATED (this is what fixes the “needs 2 clicks”)
   try {
-    await navigator.serviceWorker.ready;
+    if (fcmSwReg.installing) {
+      await new Promise((resolve, reject) => {
+        const sw = fcmSwReg.installing;
+        const onChange = () => {
+          if (sw.state === "activated") {
+            sw.removeEventListener("statechange", onChange);
+            resolve();
+          }
+        };
+        sw.addEventListener("statechange", onChange);
+        // safety timeout
+        setTimeout(() => {
+          sw.removeEventListener("statechange", onChange);
+          resolve();
+        }, 4000);
+      });
+    } else if (fcmSwReg.waiting) {
+      // If a waiting worker exists, activation may depend on reload; just continue.
+    } else if (fcmSwReg.active) {
+      // already active, good
+    }
   } catch (e) {
-    console.error("serviceWorker.ready failed:", e);
+    console.warn("SW activation wait failed:", e);
   }
 
-  // 3) Now get token
+  // 3) Now get token (retry once with a short delay if null)
   let token = null;
   try {
-    token = await messaging.getToken({
-      vapidKey: VAPID_PUBLIC_KEY,
-      serviceWorkerRegistration: swReg
-    });
+    token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: fcmSwReg });
+    if (!token) {
+      await new Promise(r => setTimeout(r, 800));
+      token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: fcmSwReg });
+    }
   } catch (e) {
-    console.error("getToken failed:", e);
+    console.error("getToken error:", e);
   }
 
   if (!token) {
@@ -1489,9 +1512,7 @@ async function loadOlderMessages() {
     return;
   }
 
-  // 4) Save token
   await database.ref(`fcmTokens/${userId}/${token}`).set(true);
-
   alert("Notificações ativadas!");
 }
 
