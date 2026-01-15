@@ -1439,43 +1439,62 @@ async function loadOlderMessages() {
 
     // ========= PUSH =========
     async function enableNotifications() {
-      // per your request: clicking bell once hides warning forever
-      hideNotifHintForever();
+  if (!authReady || !userId) {
+    alert("Auth ainda não carregou.");
+    return;
+  }
 
-      if (!authReady || !userId) {
-        alert("Auth ainda não carregou.");
-        return;
-      }
+  if (!("Notification" in window)) {
+    alert("Este navegador não suporta notificações.");
+    return;
+  }
 
-      if (!("Notification" in window)) {
-        alert("Este navegador não suporta notificações.");
-        return;
-      }
+  // 1) Ask permission
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") {
+    alert("Permissão negada.");
+    return;
+  }
 
-      const perm = await Notification.requestPermission();
-      if (perm !== "granted") {
-        alert("Permissão negada.");
-        return;
-      }
+  // 2) Register SW and WAIT until it's active/ready
+  let swReg = null;
+  try {
+    swReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
+  } catch (e) {
+    console.error("SW register failed:", e);
+    alert("Erro registrando Service Worker de notificações.");
+    return;
+  }
 
-      let fcmSwReg = null;
-      try {
-        fcmSwReg = await navigator.serviceWorker.register("/chat/firebase-messaging-sw.js", { scope: "/chat/" });
-      } catch (e) {
-        console.error(e);
-        alert("Erro registrando SW de push.");
-        return;
-      }
+  // This is the key line: wait until the SW is actually controlling the page
+  try {
+    await navigator.serviceWorker.ready;
+  } catch (e) {
+    console.error("serviceWorker.ready failed:", e);
+  }
 
-      const token = await messaging.getToken({ vapidKey: VAPID_PUBLIC_KEY, serviceWorkerRegistration: fcmSwReg });
-      if (!token) {
-        alert("Não consegui gerar o token de push.");
-        return;
-      }
+  // 3) Now get token
+  let token = null;
+  try {
+    token = await messaging.getToken({
+      vapidKey: VAPID_PUBLIC_KEY,
+      serviceWorkerRegistration: swReg
+    });
+  } catch (e) {
+    console.error("getToken failed:", e);
+  }
 
-      await database.ref(`fcmTokens/${userId}/${token}`).set(true);
-      alert("Notificações ativadas!");
-    }
+  if (!token) {
+    alert("Não consegui gerar o token de push. Tente novamente.");
+    return;
+  }
+
+  // 4) Save token
+  await database.ref(`fcmTokens/${userId}/${token}`).set(true);
+
+  alert("Notificações ativadas!");
+}
+
 
     messaging.onMessage((payload) => {
       // optional: in-app toast
