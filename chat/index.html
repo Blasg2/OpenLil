@@ -505,7 +505,7 @@
         <p>Chat ao vivo</p>
       </div>
 
-      <!-- NEW: notifications button -->
+      <!-- notifications button -->
       <button id="pushBtn" title="Ativar notificações" onclick="enableNotifications()">🔔</button>
     </div>
 
@@ -528,11 +528,9 @@
     </div>
   </div>
 
-  <!-- Firebase compat (you already use these) -->
+  <!-- Firebase compat -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-  <!-- auth + messaging compat -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
 
@@ -552,7 +550,6 @@
     const database = firebase.database();
     const auth = firebase.auth();
 
-    // FCM (web push)
     const messaging = firebase.messaging();
     const VAPID_PUBLIC_KEY = "BEosaFitBubtud4pjzqWwzjldLIUUyoI0W2-51bM17I0Cww0A3gG3HtQTWMaXUCoxHS4tO0OZp-q_1k_aVaUukgE";
 
@@ -562,11 +559,9 @@
     let userNickname = null;
     let userColor = null;
 
-    // userId comes from Firebase Auth UID
     let userId = null;
     let authReady = false;
 
-    // Reply state
     let replyTarget = null;
     let actionTarget = null;
 
@@ -590,7 +585,6 @@
       '#673AB7', '#5E35B1', '#512DA8', '#4527A0', '#311B92'
     ];
 
-    // Prevent native context menus on bubbles
     document.addEventListener('contextmenu', (e) => {
       if (e.target.closest('.message-bubble') || e.target.closest('.reply-preview') || e.target.closest('.msg-action-sheet')) {
         e.preventDefault();
@@ -621,7 +615,6 @@
       };
     }
 
-    // ========= AUTH BOOTSTRAP =========
     async function ensureAnonAuth() {
       if (auth.currentUser) return auth.currentUser;
       const cred = await auth.signInAnonymously();
@@ -634,7 +627,6 @@
         const nick = (snap.val() || '').trim();
         if (nick) return nick;
       } catch {}
-
       const localNick = (localStorage.getItem('chatNickname') || '').trim();
       if (localNick) return localNick;
       return null;
@@ -660,16 +652,12 @@
           timestamp: Date.now()
         });
         database.ref('activeUsers/' + userId).onDisconnect().remove();
-
         showChat();
-      } else {
-        // show nickname screen (default)
       }
     }
 
     boot().catch(console.error);
 
-    // ========= ENTER CHAT =========
     async function enterChat() {
       if (!authReady || !userId) {
         alert("Auth ainda não carregou. Tenta de novo em 1s.");
@@ -936,7 +924,7 @@
       event.target.value = '';
     }
 
-    <!-- ONLY CHANGE BELOW: compressImage now watermarks bottom-left -->
+    // ======= UPDATED: compress + watermark (BOTTOM-RIGHT) =======
     async function compressImage(file, maxSize) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -944,85 +932,68 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
+            let w = img.width, h = img.height;
 
-            const maxDimension = 1920;
-            if (width > maxDimension || height > maxDimension) {
-              if (width > height) {
-                height = (height / width) * maxDimension;
-                width = maxDimension;
-              } else {
-                width = (width / height) * maxDimension;
-                height = maxDimension;
-              }
+            // Keep your existing resize cap
+            if (w > 1920 || h > 1920) {
+              if (w > h) { h = (h / w) * 1920; w = 1920; }
+              else { w = (w / h) * 1920; h = 1920; }
             }
 
-            canvas.width = width;
-            canvas.height = height;
+            canvas.width = w;
+            canvas.height = h;
 
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
+            ctx.drawImage(img, 0, 0, w, h);
 
-            // Load the watermark image (same logic as your main index.html)
+            // === WATERMARK (same logic as your main page) ===
             const watermark = new Image();
             watermark.onload = () => {
               // Watermark size (15% of image size)
-              const wmSize = Math.min(width, height) * 0.15;
+              const wmSize = Math.min(w, h) * 0.15;
               const wmWidth = wmSize;
               const wmHeight = wmSize;
 
-              // Position: bottom-left with 10px padding (requested)
-              const wmX = 10;
-              const wmY = height - wmHeight - 10;
+              // Position bottom-right with 10px padding
+              const wmX = w - wmWidth - 10;
+              const wmY = h - wmHeight - 10;
 
               // Draw watermark with 50% opacity
               ctx.globalAlpha = 0.5;
               ctx.drawImage(watermark, wmX, wmY, wmWidth, wmHeight);
               ctx.globalAlpha = 1.0;
 
-              // Compress and return
-              let quality = 0.9;
-              const tryCompress = () => {
-                canvas.toBlob((b) => {
-                  if (!b) return reject(new Error('toBlob failed'));
-                  if (b.size > maxSize && quality > 0.1) {
-                    quality -= 0.1;
-                    tryCompress();
-                  } else {
-                    resolve(new File([b], file.name, { type: 'image/jpeg' }));
-                  }
-                }, 'image/jpeg', quality);
-              };
-
-              tryCompress();
+              // Then compress
+              let q = 0.9;
+              const compress = () => canvas.toBlob(b => {
+                if (!b) return reject(new Error('toBlob failed'));
+                if (b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
+                else resolve(new File([b], file.name, { type: 'image/jpeg' }));
+              }, 'image/jpeg', q);
+              compress();
             };
 
-            // If watermark fails to load, still compress without it
             watermark.onerror = () => {
-              let quality = 0.9;
-              const tryCompress = () => {
-                canvas.toBlob((b) => {
-                  if (!b) return reject(new Error('toBlob failed'));
-                  if (b.size > maxSize && quality > 0.1) {
-                    quality -= 0.1;
-                    tryCompress();
-                  } else {
-                    resolve(new File([b], file.name, { type: 'image/jpeg' }));
-                  }
-                }, 'image/jpeg', quality);
-              };
-              tryCompress();
+              // If watermark fails to load, still compress normally
+              let q = 0.9;
+              const compress = () => canvas.toBlob(b => {
+                if (!b) return reject(new Error('toBlob failed'));
+                if (b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
+                else resolve(new File([b], file.name, { type: 'image/jpeg' }));
+              }, 'image/jpeg', q);
+              compress();
             };
 
-            // IMPORTANT: put your watermark file here (same file you use on the main page)
-            // If your images folder is at site root, keep it like this:
+            // IMPORTANT: same watermark asset as your main index.html
+            // Absolute path so it works under /chat too
             watermark.src = '/images/TimeLilPixel.png';
           };
-          img.onerror = reject;
+
+          img.onerror = () => reject(new Error('Image load failed'));
           img.src = e.target.result;
         };
-        reader.onerror = reject;
+
+        reader.onerror = () => reject(new Error('File read failed'));
         reader.readAsDataURL(file);
       });
     }
@@ -1230,7 +1201,7 @@
     }
 
     messaging.onMessage((payload) => {
-      // foreground handler (optional)
+      // console.log("FCM foreground message", payload);
     });
 
     let swReg = null;
