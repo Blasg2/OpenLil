@@ -864,41 +864,48 @@
         }
       });
     }
-let hasReachedStart = false; // Add this at the top with other variables
 
-    // ========= MESSAGES: PAGING =========
-    async function initMessagesPaging() {
+// At the top with other variables
+let hasReachedStart = false;
+let oldestMessageKey = null; // Track by Firebase key instead of timestamp
+
+async function initMessagesPaging() {
   const container = document.getElementById('messagesContainer');
   container.innerHTML = '';
   loadedMessageIds.clear();
   oldestTs = null;
   newestTs = 0;
   hasReachedStart = false;
+  oldestMessageKey = null;
 
   container.addEventListener('scroll', () => {
-    // Infinite older load (more forgiving than == 0)
     if (container.scrollTop <= 10 && !isLoadingOlder && !hasReachedStart) {
       loadOlderMessages();
     }
 
-    // Scroll-to-bottom button visibility
     const dist = distanceFromBottom(container);
     showScrollBtn(dist > SCROLL_BOTTOM_THRESHOLD_PX);
   });
 
-  const snap = await messagesRef.orderByChild('timestamp').limitToLast(PAGE_SIZE).once('value');
+  // Load initial batch
+  const snap = await messagesRef.orderByKey().limitToLast(PAGE_SIZE).once('value');
   const msgs = [];
-  snap.forEach((child) => msgs.push({ id: child.key, ...child.val() }));
+  snap.forEach((child) => {
+    const msg = { id: child.key, ...child.val() };
+    msgs.push(msg);
+  });
+
+  // Sort by timestamp for display
   msgs.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
 
   msgs.forEach(m => appendMessage(m, false));
 
   if (msgs.length) {
+    oldestMessageKey = msgs[0].id;
     oldestTs = msgs[0].timestamp;
     newestTs = msgs[msgs.length - 1].timestamp || 0;
   }
 
-  // First open: go to bottom once
   setTimeout(() => {
     container.scrollTop = container.scrollHeight;
     showScrollBtn(false);
@@ -910,8 +917,7 @@ let hasReachedStart = false; // Add this at the top with other variables
 function startNewMessageListener() {
   if (newMsgListenerQuery) newMsgListenerQuery.off('child_added');
   
-  // Use startAt(newestTs + 1) to avoid re-including the last loaded message
-  newMsgListenerQuery = messagesRef.orderByChild('timestamp').startAt(newestTs + 1);
+  newMsgListenerQuery = messagesRef.orderByChild('timestamp').startAt(newestTs);
 
   newMsgListenerQuery.on('child_added', (child) => {
     const msg = { id: child.key, ...child.val() };
@@ -920,7 +926,6 @@ function startNewMessageListener() {
 
     if ((msg.timestamp || 0) > newestTs) newestTs = msg.timestamp;
 
-    // Append but DO NOT autoscroll (unless user is near bottom already)
     const container = document.getElementById('messagesContainer');
     const wasNearBottom = distanceFromBottom(container) <= SCROLL_BOTTOM_THRESHOLD_PX;
 
@@ -937,9 +942,8 @@ function startNewMessageListener() {
   });
 }
 
-
-  async function loadOlderMessages() {
-  if (isLoadingOlder || !oldestTs || hasReachedStart) return;
+async function loadOlderMessages() {
+  if (isLoadingOlder || !oldestMessageKey || hasReachedStart) return;
 
   isLoadingOlder = true;
   setOlderLoading(true);
@@ -948,14 +952,17 @@ function startNewMessageListener() {
   const prevScrollHeight = container.scrollHeight;
   const prevScrollTop = container.scrollTop;
 
+  // Use orderByKey and endBefore to get messages before the oldest key
   const olderSnap = await messagesRef
-    .orderByChild('timestamp')
-    .endBefore(oldestTs)
+    .orderByKey()
+    .endBefore(oldestMessageKey)
     .limitToLast(PAGE_SIZE)
     .once('value');
 
   const older = [];
-  olderSnap.forEach((child) => older.push({ id: child.key, ...child.val() }));
+  olderSnap.forEach((child) => {
+    older.push({ id: child.key, ...child.val() });
+  });
   
   if (older.length === 0) {
     hasReachedStart = true;
@@ -964,19 +971,22 @@ function startNewMessageListener() {
     return;
   }
 
+  // Sort by timestamp for display order
   older.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
 
   older.forEach(m => appendMessage(m, true));
+  
+  // Update oldest key
+  oldestMessageKey = older[0].id;
   oldestTs = older[0].timestamp;
 
-  // Keep scroll position stable + ensure we're above trigger threshold
+  // Maintain scroll position
   setTimeout(() => {
     const newScrollHeight = container.scrollHeight;
     const heightDiff = newScrollHeight - prevScrollHeight;
     container.scrollTop = heightDiff + prevScrollTop;
   }, 50);
 
-  // If we got fewer messages than requested, we've reached the beginning
   if (older.length < PAGE_SIZE) {
     hasReachedStart = true;
   }
@@ -984,6 +994,7 @@ function startNewMessageListener() {
   setOlderLoading(false);
   isLoadingOlder = false;
 }
+
     function appendMessage(msg, prepend) {
       if (!msg || !msg.id) return;
       if (loadedMessageIds.has(msg.id)) return;
