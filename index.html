@@ -1205,20 +1205,20 @@
         // ==========================================
         // CHAT IFRAME MODAL
         // ==========================================
-        function openChatIframe() {
-            const overlay = document.getElementById('chatIframeOverlay');
-            const modal = document.getElementById('chatIframeModal');
-            const iframe = document.getElementById('chatIframe');
-            
-            // Load iframe src only when opening
-            if (!iframe.src) {
-                iframe.src = 'https://lilslife.pages.dev/chat';
-            }
-            
-            document.body.classList.add('modal-open');
-            overlay.classList.add('active');
-            modal.classList.add('active');
-        }
+     function openChatIframe() {
+    const overlay = document.getElementById('chatIframeOverlay');
+    const modal = document.getElementById('chatIframeModal');
+    const iframe = document.getElementById('chatIframe');
+    
+    // Load iframe src only when opening
+    if (!iframe.src) {
+        iframe.src = '/chat';  // Changed to relative path
+    }
+    
+    document.body.classList.add('modal-open');
+    overlay.classList.add('active');
+    modal.classList.add('active');
+}
 
         function closeChatIframe() {
             const overlay = document.getElementById('chatIframeOverlay');
