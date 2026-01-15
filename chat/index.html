@@ -1163,24 +1163,59 @@
             const canvas = document.createElement('canvas');
             let w = img.width, h = img.height;
 
+            // resize to max 1920 like before
             if (w > 1920 || h > 1920) {
-              if (w > h) { h = (h/w)*1920; w = 1920; }
-              else { w = (w/h)*1920; h = 1920; }
+              if (w > h) { h = (h / w) * 1920; w = 1920; }
+              else { w = (w / h) * 1920; h = 1920; }
             }
 
             canvas.width = w;
             canvas.height = h;
-            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
 
-            let q = 0.9;
-            const compress = () => canvas.toBlob(b => {
-              if (b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
-              else resolve(new File([b], file.name, {type: 'image/jpeg'}));
-            }, 'image/jpeg', q);
-            compress();
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // ===== Watermark (same logic as your main page) =====
+            const watermark = new Image();
+
+            const doCompress = () => {
+              let q = 0.9;
+              const compress = () => canvas.toBlob((b) => {
+                if (b && b.size > maxSize && q > 0.1) { q -= 0.1; compress(); }
+                else resolve(new File([b], file.name, { type: 'image/jpeg' }));
+              }, 'image/jpeg', q);
+              compress();
+            };
+
+            watermark.onload = () => {
+              const wmSize = Math.min(w, h) * 0.15; // 15%
+              const wmW = wmSize;
+              const wmH = wmSize;
+
+              // bottom-right with 10px padding
+              const wmX = w - wmW - 10;
+              const wmY = h - wmH - 10;
+
+              ctx.globalAlpha = 0.5;
+              ctx.drawImage(watermark, wmX, wmY, wmW, wmH);
+              ctx.globalAlpha = 1.0;
+
+              doCompress();
+            };
+
+            watermark.onerror = () => {
+              console.warn('Watermark failed to load, continuing without watermark');
+              doCompress();
+            };
+
+            // IMPORTANT: absolute path so it works from /chat
+            watermark.src = '/images/TimeLilPixel.png';
+            // ================================================
           };
+          img.onerror = reject;
           img.src = e.target.result;
         };
+        reader.onerror = reject;
         reader.readAsDataURL(file);
       });
     }
