@@ -761,16 +761,17 @@ body.in-iframe #chatHeader {
       return cred.user;
     }
 
-    async function loadNicknameFromDbOrLocal(uid) {
-      try {
-        const snap = await database.ref(`users/${uid}/profile/nickname`).once('value');
-        const nick = (snap.val() || '').trim();
-        if (nick) return nick;
-      } catch {}
-      const localNick = (localStorage.getItem('chatNickname') || '').trim();
-      if (localNick) return localNick;
-      return null;
-    }
+async function loadNicknameFromDbOrLocal(uid) {
+  try {
+    const snap = await database.ref(`users/${uid}/profile/nickname`).once('value');
+    const nick = (snap.val() || '').trim();
+    if (nick) return nick;
+  } catch {}
+  // IMPORTANT: no local fallback.
+  // If the DB nickname/profile is deleted, user must re-pick.
+  return null;
+}
+
 
     async function loadColorFromLocal() {
       const c = (localStorage.getItem('chatColor') || '').trim();
