@@ -524,6 +524,27 @@ body.in-iframe #chatHeader {
       transform: scale(0.95);
     }
 
+    /* Oi play button */
+    .oi-play-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: none;
+      background: #667eea;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+
+    .oi-play-btn:active {
+      transform: scale(0.9);
+    }
+
     #messageInput {
       flex: 1;
       background: #2a2a2a;
@@ -1406,6 +1427,11 @@ async function loadOlderMessages() {
       else if (isImage) snippet = 'Imagem';
       else snippet = snippetFromMsg(msg);
 
+      // Check if message is "oi", "olá", or "ola" (case insensitive)
+      const messageText = (msg.message || '').trim().toLowerCase();
+      const isOiMessage = messageText === 'oi' || messageText === 'olá' || messageText === 'ola';
+      const oiButton = isOiMessage ? `<button class="oi-play-btn" onclick="playOiAudio()" title="Tocar áudio">🔊</button>` : '';
+
       // Show delete button only for Gui
       const isGui = userNickname && userNickname.toLowerCase() === 'gui';
       const deleteBtn = isGui ? `<button class="message-delete-btn" onclick="deleteMessage('${escapeHtml(msg.id)}', '${escapeHtml(msg.audioUrl || '')}', '${escapeHtml(msg.imageUrl || '')}')">🗑️</button>` : '';
@@ -1423,7 +1449,10 @@ async function loadOlderMessages() {
           ${deleteBtn}
           ${replyHtml}
           ${nicknameHtml}
-          <div class="message-text">${content}</div>
+          <div class="message-text" style="display: flex; align-items: center;">
+            <span style="flex: 1;">${content}</span>
+            ${oiButton}
+          </div>
           <div class="message-time">${time}</div>
         </div>
       `;
@@ -1725,8 +1754,8 @@ async function loadOlderMessages() {
         
         console.log('Audio duration:', duration);
         
-        // If audio > 6 seconds, 50% chance of chaos injection
-        if (duration > 6 && Math.random() < 0.5) {
+        // If audio > 6 seconds, 20% chance of chaos injection
+        if (duration > 6 && Math.random() < 0.2) {
           console.log('Chaos triggered!');
           finalBlob = await injectChaosAudio(audioBuffer, audioContext);
         }
@@ -2007,6 +2036,16 @@ async function loadOlderMessages() {
         audio.playbackRate = 1;
         btn.textContent = '1x';
       }
+    }
+
+    // Play oi audio
+    let oiAudio = null;
+    function playOiAudio() {
+      if (!oiAudio) {
+        oiAudio = new Audio('images/oi.mp3');
+      }
+      oiAudio.currentTime = 0;
+      oiAudio.play().catch(e => console.error('Error playing oi audio:', e));
     }
 
     function startAudioProgress(audioId) {
