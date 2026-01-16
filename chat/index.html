@@ -1178,8 +1178,8 @@ async function loadOlderMessages() {
       let nicknameHtml = '';
       
       if (nickname.toLowerCase() === 'lil' || nickname.toLowerCase() === 'lill') {
-        // Simple blue username for Lil and Lill
-        nicknameHtml = `<div class="message-nickname lil-username">${escapeHtml(nickname)}</div>`;
+        // Simple blue username for Lil and Lill (display both as "Lil")
+        nicknameHtml = `<div class="message-nickname lil-username">Lil</div>`;
       } else if (nickname.toLowerCase() === 'lorena') {
         // Lorena with pretty pink color and animated kisses
         nicknameHtml = `
