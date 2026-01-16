@@ -284,6 +284,38 @@ body.in-iframe #chatHeader {
       text-align: right;
     }
 
+    /* Delete button */
+    .message-delete-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .message-delete-btn:hover {
+      opacity: 1;
+    }
+
+    .message-delete-btn:active {
+      transform: scale(0.9);
+    }
+
+    .message-bubble:hover .message-delete-btn {
+      display: flex;
+    }
+
     /* Reply preview */
     .reply-preview {
       background: rgba(255,255,255,0.06);
@@ -1374,6 +1406,10 @@ async function loadOlderMessages() {
       else if (isImage) snippet = 'Imagem';
       else snippet = snippetFromMsg(msg);
 
+      // Show delete button only for Gui
+      const isGui = userNickname && userNickname.toLowerCase() === 'gui';
+      const deleteBtn = isGui ? `<button class="message-delete-btn" onclick="deleteMessage('${escapeHtml(msg.id)}', '${escapeHtml(msg.audioUrl || '')}', '${escapeHtml(msg.imageUrl || '')}')">🗑️</button>` : '';
+
       div.innerHTML = `
         <div class="message-bubble"
              oncontextmenu="return false"
@@ -1384,6 +1420,7 @@ async function loadOlderMessages() {
              data-snippet="${escapeHtml(snippet)}"
              data-imageurl="${escapeHtml(isImage ? msg.imageUrl : '')}"
              data-audiourl="${escapeHtml(isAudio ? msg.audioUrl : '')}">
+          ${deleteBtn}
           ${replyHtml}
           ${nicknameHtml}
           <div class="message-text">${content}</div>
@@ -1979,6 +2016,42 @@ async function loadOlderMessages() {
     function cancelReply() {
       replyTarget = null;
       document.getElementById('replyBar').classList.remove('active');
+    }
+
+    // ========= DELETE MESSAGE =========
+    async function deleteMessage(messageId, audioUrl, imageUrl) {
+      if (!confirm('Deletar esta mensagem?')) return;
+
+      try {
+        // Delete from database
+        await messagesRef.child(messageId).remove();
+
+        // Delete audio file from Storage if exists
+        if (audioUrl) {
+          try {
+            const audioRef = storage.refFromURL(audioUrl);
+            await audioRef.delete();
+          } catch (e) {
+            console.warn('Failed to delete audio file:', e);
+          }
+        }
+
+        // Note: ImgBB images can't be deleted via API, they're permanent
+        // If you want deletable images, switch to Firebase Storage
+
+        // Remove from UI
+        const msgElement = document.getElementById(`msg-${messageId}`);
+        if (msgElement && msgElement.parentElement) {
+          msgElement.parentElement.remove();
+        }
+
+        // Remove from loaded set
+        loadedMessageIds.delete(messageId);
+
+      } catch (error) {
+        console.error('Error deleting message:', error);
+        alert('Erro ao deletar mensagem.');
+      }
     }
 
     // ========= PUSH =========
