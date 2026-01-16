@@ -361,6 +361,137 @@ body.in-iframe #chatHeader {
       flex-shrink: 0;
     }
 
+    #audioBtn {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      border: none;
+      background: #667eea;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #audioBtn:active { transform: scale(0.95); }
+
+    #audioBtn.recording {
+      background: #ef4444;
+      animation: pulse-recording 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-recording {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Recording indicator */
+    #recordingIndicator {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: rgba(239, 68, 68, 0.15);
+      border-radius: 20px;
+      color: #ef4444;
+      font-size: 13px;
+      font-weight: 600;
+      position: absolute;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 130;
+    }
+
+    #recordingIndicator.active {
+      display: flex;
+    }
+
+    .recording-dot {
+      width: 8px;
+      height: 8px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Audio player in messages */
+    .message-audio {
+      margin-top: 5px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .audio-play-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: #667eea;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .audio-play-btn:active {
+      transform: scale(0.95);
+    }
+
+    .audio-waveform {
+      flex: 1;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .audio-progress {
+      height: 100%;
+      background: #667eea;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .audio-time {
+      font-size: 11px;
+      color: #aaa;
+      min-width: 35px;
+      text-align: right;
+    }
+
+    .audio-speed-btn {
+      font-size: 11px;
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.15);
+      border: none;
+      padding: 4px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .audio-speed-btn:active {
+      transform: scale(0.95);
+    }
+
     #messageInput {
       flex: 1;
       background: #2a2a2a;
@@ -672,8 +803,15 @@ body.in-iframe #chatHeader {
 
     <div id="inputArea">
       <button id="imageBtn" onclick="openImageSource()">📷</button>
+      <button id="audioBtn" onclick="toggleAudioRecording()">🎤</button>
       <textarea id="messageInput" placeholder="Mensagem..." rows="1"></textarea>
       <button id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+    
+    <!-- Recording indicator -->
+    <div id="recordingIndicator">
+      <div class="recording-dot"></div>
+      <span id="recordingTime">0:00</span>
     </div>
   </div>
 
@@ -685,6 +823,7 @@ body.in-iframe #chatHeader {
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 
   <script>
     const firebaseConfig = {
@@ -701,6 +840,7 @@ body.in-iframe #chatHeader {
 
     const database = firebase.database();
     const auth = firebase.auth();
+    const storage = firebase.storage();
 
     // FCM
     const messaging = firebase.messaging();
@@ -717,6 +857,13 @@ body.in-iframe #chatHeader {
 
     let replyTarget = null;
     let actionTarget = null;
+
+    // Audio recording
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recordingStartTime = null;
+    let recordingTimer = null;
+    let isRecording = false;
 
     // Paging + loaded tracking
     const PAGE_SIZE = 60;
@@ -783,7 +930,8 @@ body.in-iframe #chatHeader {
         nickname: bubbleEl.getAttribute('data-nickname') || '',
         color: bubbleEl.getAttribute('data-color') || '#667eea',
         text: bubbleEl.getAttribute('data-snippet') || '',
-        imageUrl: bubbleEl.getAttribute('data-imageurl') || null
+        imageUrl: bubbleEl.getAttribute('data-imageurl') || null,
+        audioUrl: bubbleEl.getAttribute('data-audiourl') || null
       };
     }
 
@@ -1133,7 +1281,20 @@ async function loadOlderMessages() {
       const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       let content = '';
-      if (msg.imageUrl) {
+      if (msg.audioUrl) {
+        // Audio message
+        const audioId = `audio-${msg.id}`;
+        content = `
+          <div class="message-audio">
+            <button class="audio-play-btn" onclick="toggleAudioPlay('${audioId}')">▶</button>
+            <div class="audio-waveform">
+              <div class="audio-progress" id="${audioId}-progress"></div>
+            </div>
+            <span class="audio-time" id="${audioId}-time">0:00</span>
+            <button class="audio-speed-btn" onclick="toggleAudioSpeed('${audioId}')">1x</button>
+            <audio id="${audioId}" src="${escapeHtml(msg.audioUrl)}" preload="metadata"></audio>
+          </div>`;
+      } else if (msg.imageUrl) {
         content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" draggable="false" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
       } else if (msg.message) {
         // Check if message is from Lil or Lill - if so, ALL words become red Lil
@@ -1158,19 +1319,24 @@ async function loadOlderMessages() {
       }
 
       let replyHtml = '';
-      if (msg.replyTo && (msg.replyTo.nickname || msg.replyTo.text || msg.replyTo.imageUrl)) {
+      if (msg.replyTo && (msg.replyTo.nickname || msg.replyTo.text || msg.replyTo.imageUrl || msg.replyTo.audioUrl)) {
         const rName = escapeHtml(msg.replyTo.nickname || 'Mensagem');
         const rText = escapeHtml(msg.replyTo.text || '');
         const rColor = escapeHtml(msg.replyTo.color || '#667eea');
         const rId = escapeHtml(msg.replyTo.id || '');
         const rImg = msg.replyTo.imageUrl ? escapeHtml(msg.replyTo.imageUrl) : '';
+        const rAudio = msg.replyTo.audioUrl;
+        
+        let snippetText = rText;
+        if (rImg) snippetText = 'Imagem';
+        if (rAudio) snippetText = '🎤 Áudio';
 
         replyHtml = `
           <div class="reply-preview" onclick="scrollToMessage('${rId}')">
             <div class="reply-name" style="color:${rColor}">${rName}</div>
             <div class="reply-preview-row">
               ${rImg ? `<img class="reply-thumb" draggable="false" src="${rImg}" alt="thumb">` : ``}
-              <div class="reply-snippet">${rImg ? 'Imagem' : rText}</div>
+              <div class="reply-snippet">${snippetText}</div>
             </div>
           </div>
         `;
@@ -1202,6 +1368,12 @@ async function loadOlderMessages() {
         nicknameHtml = `<div class="message-nickname" style="color:${escapeHtml(msg.color)}">${escapeHtml(nickname)}</div>`;
       }
 
+      const isAudio = !!msg.audioUrl;
+      let snippet = '';
+      if (isAudio) snippet = '🎤 Áudio';
+      else if (isImage) snippet = 'Imagem';
+      else snippet = snippetFromMsg(msg);
+
       div.innerHTML = `
         <div class="message-bubble"
              oncontextmenu="return false"
@@ -1209,8 +1381,9 @@ async function loadOlderMessages() {
              data-id="${escapeHtml(msg.id)}"
              data-nickname="${escapeHtml(msg.nickname)}"
              data-color="${escapeHtml(msg.color)}"
-             data-snippet="${escapeHtml(isImage ? 'Imagem' : snippetFromMsg(msg))}"
-             data-imageurl="${escapeHtml(isImage ? msg.imageUrl : '')}">
+             data-snippet="${escapeHtml(snippet)}"
+             data-imageurl="${escapeHtml(isImage ? msg.imageUrl : '')}"
+             data-audiourl="${escapeHtml(isAudio ? msg.audioUrl : '')}">
           ${replyHtml}
           ${nicknameHtml}
           <div class="message-text">${content}</div>
@@ -1414,6 +1587,132 @@ async function loadOlderMessages() {
       return (await res.json()).data.url;
     }
 
+    /* AUDIO RECORDING */
+    async function toggleAudioRecording() {
+      if (isRecording) {
+        stopRecording();
+      } else {
+        await startRecording();
+      }
+    }
+
+    async function startRecording() {
+      if (!authReady || !userId) {
+        alert("Auth ainda não carregou.");
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+        
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          stream.getTracks().forEach(track => track.stop());
+          await uploadAndSendAudio(audioBlob);
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        recordingStartTime = Date.now();
+        
+        // UI updates
+        document.getElementById('audioBtn').classList.add('recording');
+        document.getElementById('recordingIndicator').classList.add('active');
+        
+        // Start timer
+        updateRecordingTime();
+        recordingTimer = setInterval(updateRecordingTime, 1000);
+        
+        // Auto-stop after 60 seconds
+        setTimeout(() => {
+          if (isRecording) stopRecording();
+        }, 60000);
+        
+      } catch (error) {
+        console.error('Error starting recording:', error);
+        alert('Erro ao acessar o microfone. Permita o acesso e tente novamente.');
+      }
+    }
+
+    function stopRecording() {
+      if (!isRecording || !mediaRecorder) return;
+      
+      isRecording = false;
+      mediaRecorder.stop();
+      clearInterval(recordingTimer);
+      
+      // UI updates
+      document.getElementById('audioBtn').classList.remove('recording');
+      document.getElementById('recordingIndicator').classList.remove('active');
+    }
+
+    function updateRecordingTime() {
+      if (!isRecording) return;
+      
+      const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+      const minutes = Math.floor(elapsed / 60);
+      const seconds = elapsed % 60;
+      document.getElementById('recordingTime').textContent = 
+        `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    async function uploadAndSendAudio(audioBlob) {
+      const status = document.getElementById('uploadStatus');
+      status.style.display = 'block';
+      status.textContent = 'Enviando áudio...';
+      
+      try {
+        // Upload to Firebase Storage
+        const audioId = `audio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const storageRef = storage.ref(`chat-audio/${audioId}.webm`);
+        
+        await storageRef.put(audioBlob);
+        const audioUrl = await storageRef.getDownloadURL();
+        
+        // Send message with audio
+        const payload = {
+          uid: userId,
+          nickname: userNickname,
+          audioUrl: audioUrl,
+          color: userColor,
+          timestamp: Date.now()
+        };
+        
+        if (replyTarget) {
+          payload.replyTo = {
+            id: replyTarget.id,
+            nickname: replyTarget.nickname,
+            color: replyTarget.color,
+            text: replyTarget.text || '',
+            imageUrl: replyTarget.imageUrl || null,
+            audioUrl: replyTarget.audioUrl || null
+          };
+        }
+        
+        await messagesRef.push(payload);
+        
+        status.textContent = 'Áudio enviado!';
+        setTimeout(() => { status.style.display = 'none'; }, 2000);
+        
+        cancelReply();
+        jumpToBottom();
+        
+      } catch (error) {
+        console.error('Error uploading audio:', error);
+        status.textContent = 'Erro ao enviar áudio';
+        setTimeout(() => { status.style.display = 'none'; }, 3000);
+      }
+    }
+
     function openLightbox(url) {
       document.getElementById('lightboxImage').src = url;
       document.getElementById('lightbox').classList.add('active');
@@ -1421,6 +1720,102 @@ async function loadOlderMessages() {
     function closeLightbox() {
       document.getElementById('lightbox').classList.remove('active');
     }
+
+    /* AUDIO PLAYER CONTROLS */
+    function toggleAudioPlay(audioId) {
+      const audio = document.getElementById(audioId);
+      const btn = audio.parentElement.querySelector('.audio-play-btn');
+      
+      if (audio.paused) {
+        // Stop all other audios
+        document.querySelectorAll('audio').forEach(a => {
+          if (a.id !== audioId && !a.paused) {
+            a.pause();
+            a.currentTime = 0;
+            const otherBtn = a.parentElement.querySelector('.audio-play-btn');
+            if (otherBtn) otherBtn.textContent = '▶';
+          }
+        });
+        
+        audio.play();
+        btn.textContent = '⏸';
+        startAudioProgress(audioId);
+      } else {
+        audio.pause();
+        btn.textContent = '▶';
+      }
+    }
+
+    function toggleAudioSpeed(audioId) {
+      const audio = document.getElementById(audioId);
+      const btn = audio.parentElement.querySelector('.audio-speed-btn');
+      
+      if (audio.playbackRate === 1) {
+        audio.playbackRate = 2;
+        btn.textContent = '2x';
+      } else {
+        audio.playbackRate = 1;
+        btn.textContent = '1x';
+      }
+    }
+
+    function startAudioProgress(audioId) {
+      const audio = document.getElementById(audioId);
+      const progressBar = document.getElementById(`${audioId}-progress`);
+      const timeDisplay = document.getElementById(`${audioId}-time`);
+      const btn = audio.parentElement.querySelector('.audio-play-btn');
+      
+      const updateProgress = () => {
+        if (audio.paused) return;
+        
+        const percent = (audio.currentTime / audio.duration) * 100;
+        progressBar.style.width = percent + '%';
+        
+        const current = Math.floor(audio.currentTime);
+        const minutes = Math.floor(current / 60);
+        const seconds = current % 60;
+        timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        requestAnimationFrame(updateProgress);
+      };
+      
+      audio.onended = () => {
+        btn.textContent = '▶';
+        progressBar.style.width = '0%';
+        audio.currentTime = 0;
+        
+        const duration = Math.floor(audio.duration);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      };
+      
+      // Set initial duration display
+      if (audio.duration && !isNaN(audio.duration)) {
+        const duration = Math.floor(audio.duration);
+        const minutes = Math.floor(duration / 60);
+        const seconds = duration % 60;
+        timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+      
+      updateProgress();
+    }
+
+    // Load duration when audio metadata is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('loadedmetadata', (e) => {
+        if (e.target.tagName === 'AUDIO' && e.target.duration) {
+          const audioId = e.target.id;
+          const timeDisplay = document.getElementById(`${audioId}-time`);
+          if (timeDisplay) {
+            const duration = Math.floor(e.target.duration);
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          }
+        }
+      }, true);
+    });
 
     /* CAMERA/GALLERY */
     function openImageSource() {
@@ -1531,6 +1926,10 @@ async function loadOlderMessages() {
         thumb.src = actionTarget.imageUrl;
         thumb.style.display = 'block';
         text.textContent = 'Imagem';
+      } else if (actionTarget.audioUrl) {
+        thumb.style.display = 'none';
+        thumb.src = '';
+        text.textContent = '🎤 Áudio';
       } else {
         thumb.style.display = 'none';
         thumb.src = '';
@@ -1567,7 +1966,11 @@ async function loadOlderMessages() {
       const text = document.getElementById('replyBarText');
 
       title.textContent = `Respondendo a ${target.nickname || 'mensagem'}`;
-      text.textContent = target.imageUrl ? 'Imagem' : (target.text || '');
+      
+      let displayText = target.text || '';
+      if (target.imageUrl) displayText = 'Imagem';
+      if (target.audioUrl) displayText = '🎤 Áudio';
+      text.textContent = displayText;
 
       bar.classList.add('active');
       document.getElementById('messageInput').focus();
