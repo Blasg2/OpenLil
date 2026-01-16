@@ -2042,7 +2042,7 @@ async function loadOlderMessages() {
     let oiAudio = null;
     function playOiAudio() {
       if (!oiAudio) {
-        oiAudio = new Audio('images/oi.mp3');
+        oiAudio = new Audio('/images/oi.mp3');
       }
       oiAudio.currentTime = 0;
       oiAudio.play().catch(e => console.error('Error playing oi audio:', e));
