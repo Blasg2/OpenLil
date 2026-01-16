@@ -1351,10 +1351,10 @@ async function loadOlderMessages() {
         content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" draggable="false" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
       } else if (msg.message) {
         // Check if message is from Lil or Lill - if so, ALL words become red Lil
-        const isFromLil = (msg.nickname || '').toLowerCase() === 'lil' || (msg.nickname || '').toLowerCase() === 'lill';
+        const isFromLil = (msg.nickname || '').toLowerCase() === 'lil' || (msg.nickname || '').toLowerCase() === 'lill' || (msg.nickname || '').toLowerCase() === 'lilll';
         
         if (isFromLil) {
-          // Display ALL words as red Lil for Lil/Lill messages
+          // Display ALL words as red Lil for Lil/Lill/Lilll messages
           const words = msg.message.split(' ');
           content = words.map(w => 
             `<span style="color:red;font-weight:bold">Lil</span>`
@@ -1401,8 +1401,8 @@ async function loadOlderMessages() {
       const nickname = msg.nickname || '';
       let nicknameHtml = '';
       
-      if (nickname.toLowerCase() === 'lil' || nickname.toLowerCase() === 'lill') {
-        // Simple blue username for Lil and Lill (display both as "Lil")
+      if (nickname.toLowerCase() === 'lil' || nickname.toLowerCase() === 'lill' || nickname.toLowerCase() === 'lilll') {
+        // Simple blue username for Lil, Lill, and Lilll (display all as "Lil")
         nicknameHtml = `<div class="message-nickname lil-username">Lil</div>`;
       } else if (nickname.toLowerCase() === 'lorena') {
         // Lorena with pretty pink color and animated kisses
@@ -1477,14 +1477,14 @@ async function loadOlderMessages() {
       const words = message.split(' ');
       const transformedIndices = [];
       
-      // If the sender is "Lil" or "Lill", transform ALL words to "Lil"
-      const isLil = userNickname.toLowerCase() === 'lil' || userNickname.toLowerCase() === 'lill';
+      // If the sender is "Lil", "Lill", or "Lilll", transform ALL words to "Lil"
+      const isLil = userNickname.toLowerCase() === 'lil' || userNickname.toLowerCase() === 'lill' || userNickname.toLowerCase() === 'lilll';
       
       const transformed = words.map((w, i) => {
         if (w.toLowerCase() === 'lil') return w;
         
         if (isLil) {
-          // Lil/Lill's messages: every word becomes "Lil"
+          // Lil/Lill/Lilll's messages: every word becomes "Lil"
           transformedIndices.push(i);
           return 'Lil';
         } else {
