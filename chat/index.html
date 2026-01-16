@@ -1725,8 +1725,8 @@ async function loadOlderMessages() {
         
         console.log('Audio duration:', duration);
         
-        // If audio > 6 seconds, 20% chance of chaos injection
-        if (duration > 6 && Math.random() < 0.2) {
+        // If audio > 6 seconds, 50% chance of chaos injection
+        if (duration > 6 && Math.random() < 0.5) {
           console.log('Chaos triggered!');
           finalBlob = await injectChaosAudio(audioBuffer, audioContext);
         }
