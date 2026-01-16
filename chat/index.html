@@ -211,6 +211,11 @@ body.in-iframe #chatHeader {
       color: #ff69b4 !important;
     }
 
+    /* Gui username - Evangelion purple */
+    .gui-username {
+      color: #9333ea !important;
+    }
+
     /* Lorena kisses container */
     .lorena-container {
       position: relative;
@@ -1189,6 +1194,9 @@ async function loadOlderMessages() {
             <span class="kiss">💋</span>
             ${escapeHtml(nickname)}
           </div>`;
+      } else if (nickname.toLowerCase() === 'gui') {
+        // Gui with Evangelion purple
+        nicknameHtml = `<div class="message-nickname gui-username">${escapeHtml(nickname)}</div>`;
       } else {
         // Normal nickname
         nicknameHtml = `<div class="message-nickname" style="color:${escapeHtml(msg.color)}">${escapeHtml(nickname)}</div>`;
