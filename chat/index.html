@@ -201,6 +201,65 @@ body.in-iframe #chatHeader {
     .message-nickname { font-weight: bold; font-size: 13px; margin-bottom: 4px; }
     .message-text { color: #e8e8e8; font-size: 15px; line-height: 1.4; }
 
+    /* Lil username - simple blue */
+    .lil-username {
+      color: rgb(44, 120, 173) !important;
+    }
+
+    /* Lorena username - pretty girl pink */
+    .lorena-username {
+      color: #ff69b4 !important;
+    }
+
+    /* Lorena kisses container */
+    .lorena-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    .kiss {
+      position: absolute;
+      font-size: 16px;
+      animation: float-kiss 3s ease-in-out infinite;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .kiss:nth-child(1) {
+      animation-delay: 0s;
+      left: -20px;
+      top: -5px;
+    }
+
+    .kiss:nth-child(2) {
+      animation-delay: 1s;
+      right: -20px;
+      top: -5px;
+    }
+
+    .kiss:nth-child(3) {
+      animation-delay: 2s;
+      left: -15px;
+      top: 10px;
+    }
+
+    @keyframes float-kiss {
+      0% {
+        opacity: 0;
+        transform: translateY(0) rotate(0deg) scale(0.5);
+      }
+      20% {
+        opacity: 1;
+      }
+      80% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-30px) rotate(15deg) scale(1);
+      }
+    }
+
     .message-image {
       max-width: 250px;
       width: 100%;
@@ -1072,7 +1131,17 @@ async function loadOlderMessages() {
       if (msg.imageUrl) {
         content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" draggable="false" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
       } else if (msg.message) {
-        if (msg.transformedIndices?.length) {
+        // Check if message is from Lil or Lill - if so, ALL words become red Lil
+        const isFromLil = (msg.nickname || '').toLowerCase() === 'lil' || (msg.nickname || '').toLowerCase() === 'lill';
+        
+        if (isFromLil) {
+          // Display ALL words as red Lil for Lil/Lill messages
+          const words = msg.message.split(' ');
+          content = words.map(w => 
+            `<span style="color:red;font-weight:bold">Lil</span>`
+          ).join(' ');
+        } else if (msg.transformedIndices?.length) {
+          // Normal transformation for other users
           const words = msg.message.split(' ');
           content = words.map((w, i) => msg.transformedIndices.includes(i)
             ? `<span style="color:red;font-weight:bold">${escapeHtml(w)}</span>`
@@ -1104,6 +1173,27 @@ async function loadOlderMessages() {
 
       const isImage = !!msg.imageUrl;
 
+      // Check for special username effects
+      const nickname = msg.nickname || '';
+      let nicknameHtml = '';
+      
+      if (nickname.toLowerCase() === 'lil' || nickname.toLowerCase() === 'lill') {
+        // Simple blue username for Lil and Lill
+        nicknameHtml = `<div class="message-nickname lil-username">${escapeHtml(nickname)}</div>`;
+      } else if (nickname.toLowerCase() === 'lorena') {
+        // Lorena with pretty pink color and animated kisses
+        nicknameHtml = `
+          <div class="message-nickname lorena-container lorena-username">
+            <span class="kiss">💋</span>
+            <span class="kiss">💋</span>
+            <span class="kiss">💋</span>
+            ${escapeHtml(nickname)}
+          </div>`;
+      } else {
+        // Normal nickname
+        nicknameHtml = `<div class="message-nickname" style="color:${escapeHtml(msg.color)}">${escapeHtml(nickname)}</div>`;
+      }
+
       div.innerHTML = `
         <div class="message-bubble"
              oncontextmenu="return false"
@@ -1114,7 +1204,7 @@ async function loadOlderMessages() {
              data-snippet="${escapeHtml(isImage ? 'Imagem' : snippetFromMsg(msg))}"
              data-imageurl="${escapeHtml(isImage ? msg.imageUrl : '')}">
           ${replyHtml}
-          <div class="message-nickname" style="color:${escapeHtml(msg.color)}">${escapeHtml(msg.nickname)}</div>
+          ${nicknameHtml}
           <div class="message-text">${content}</div>
           <div class="message-time">${time}</div>
         </div>
@@ -1139,11 +1229,23 @@ async function loadOlderMessages() {
 
       const words = message.split(' ');
       const transformedIndices = [];
+      
+      // If the sender is "Lil" or "Lill", transform ALL words to "Lil"
+      const isLil = userNickname.toLowerCase() === 'lil' || userNickname.toLowerCase() === 'lill';
+      
       const transformed = words.map((w, i) => {
         if (w.toLowerCase() === 'lil') return w;
-        if (Math.random() < 0.05) {
+        
+        if (isLil) {
+          // Lil/Lill's messages: every word becomes "Lil"
           transformedIndices.push(i);
           return 'Lil';
+        } else {
+          // Others: 5% chance
+          if (Math.random() < 0.05) {
+            transformedIndices.push(i);
+            return 'Lil';
+          }
         }
         return w;
       }).join(' ');
