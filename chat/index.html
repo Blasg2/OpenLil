@@ -1707,13 +1707,39 @@ async function loadOlderMessages() {
       status.style.display = 'block';
       status.textContent = 'Enviando áudio...';
       
+      console.log('Starting audio upload...', { 
+        blobSize: audioBlob.size, 
+        userId, 
+        userNickname 
+      });
+      
       try {
+        // Check if we should inject chaos audio
+        let finalBlob = audioBlob;
+        
+        // Decode to check duration
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        const duration = audioBuffer.duration;
+        
+        console.log('Audio duration:', duration);
+        
+        // If audio > 6 seconds, 20% chance of chaos injection
+        if (duration > 6 && Math.random() < 0.2) {
+          console.log('Chaos triggered!');
+          finalBlob = await injectChaosAudio(audioBuffer, audioContext);
+        }
+        
         // Upload to Firebase Storage
         const audioId = `audio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const storageRef = storage.ref(`chat-audio/${audioId}.webm`);
         
-        await storageRef.put(audioBlob);
+        console.log('Uploading to storage:', audioId);
+        await storageRef.put(finalBlob);
+        
         const audioUrl = await storageRef.getDownloadURL();
+        console.log('Got download URL:', audioUrl);
         
         // Send message with audio
         const payload = {
@@ -1735,7 +1761,9 @@ async function loadOlderMessages() {
           };
         }
         
-        await messagesRef.push(payload);
+        console.log('Pushing to database:', payload);
+        const result = await messagesRef.push(payload);
+        console.log('Message saved with key:', result.key);
         
         status.textContent = 'Áudio enviado!';
         setTimeout(() => { status.style.display = 'none'; }, 2000);
@@ -1745,9 +1773,194 @@ async function loadOlderMessages() {
         
       } catch (error) {
         console.error('Error uploading audio:', error);
-        status.textContent = 'Erro ao enviar áudio';
-        setTimeout(() => { status.style.display = 'none'; }, 3000);
+        console.error('Error details:', {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+        status.textContent = 'Erro ao enviar áudio: ' + error.message;
+        setTimeout(() => { status.style.display = 'none'; }, 5000);
       }
+    }
+
+    async function injectChaosAudio(originalBuffer, audioContext) {
+      try {
+        // Fetch chaos audio
+        const chaosResponse = await fetch('images/intrusiva.mp3');
+        const chaosArrayBuffer = await chaosResponse.arrayBuffer();
+        const chaosBuffer = await audioContext.decodeAudioData(chaosArrayBuffer);
+        
+        const originalDuration = originalBuffer.duration;
+        const chaosDuration = chaosBuffer.duration; // Use actual chaos audio duration
+        const sampleRate = originalBuffer.sampleRate;
+        const numberOfChannels = originalBuffer.numberOfChannels;
+        
+        // Total cut duration: 0.5s silence + chaos audio + 0.5s silence
+        const totalCutDuration = 0.5 + chaosDuration + 0.5;
+        
+        // Pick random cut position (between 2s and duration-2s, then subtract total cut duration)
+        const earliestCut = 2;
+        const latestCut = originalDuration - 2 - totalCutDuration;
+        const cutStart = earliestCut + Math.random() * (latestCut - earliestCut);
+        
+        console.log('Cutting at:', cutStart, 'chaos duration:', chaosDuration, 'total cut:', totalCutDuration);
+        
+        // Calculate sample positions
+        const cutStartSample = Math.floor(cutStart * sampleRate);
+        const cutEndSample = Math.floor((cutStart + totalCutDuration) * sampleRate);
+        const silenceSamples = Math.floor(0.5 * sampleRate); // 0.5s silence
+        const chaosAudioSamples = chaosBuffer.length; // Full chaos audio length
+        
+        // Create new buffer with same length
+        const newBuffer = audioContext.createBuffer(
+          numberOfChannels,
+          originalBuffer.length,
+          sampleRate
+        );
+        
+        // Copy each channel
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+          const originalData = originalBuffer.getChannelData(channel);
+          const chaosData = chaosBuffer.numberOfChannels > channel 
+            ? chaosBuffer.getChannelData(channel) 
+            : chaosBuffer.getChannelData(0);
+          const newData = newBuffer.getChannelData(channel);
+          
+          // Copy everything before the cut
+          for (let i = 0; i < cutStartSample; i++) {
+            newData[i] = originalData[i];
+          }
+          
+          // Insert cut section: 0.5s silence + full chaos audio + 0.5s silence
+          let cutPos = cutStartSample;
+          
+          // 0.5s silence
+          for (let i = 0; i < silenceSamples; i++) {
+            newData[cutPos++] = 0;
+          }
+          
+          // Full chaos audio
+          for (let i = 0; i < chaosAudioSamples; i++) {
+            newData[cutPos++] = chaosData[i];
+          }
+          
+          // 0.5s silence
+          for (let i = 0; i < silenceSamples; i++) {
+            newData[cutPos++] = 0;
+          }
+          
+          // Copy everything after the cut
+          for (let i = cutEndSample; i < originalBuffer.length; i++) {
+            newData[i] = originalData[i];
+          }
+        }
+        
+        // Encode back to WebM
+        return await encodeAudioBuffer(newBuffer);
+        
+      } catch (error) {
+        console.error('Chaos injection failed, using original:', error);
+        // If chaos fails, just return original
+        return new Blob([await originalBuffer.audioContext.encodeAudioData(originalBuffer)], 
+          { type: 'audio/webm' });
+      }
+    }
+
+    async function encodeAudioBuffer(audioBuffer) {
+      // Create offline context for rendering
+      const offlineContext = new OfflineAudioContext(
+        audioBuffer.numberOfChannels,
+        audioBuffer.length,
+        audioBuffer.sampleRate
+      );
+      
+      const source = offlineContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(offlineContext.destination);
+      source.start(0);
+      
+      const renderedBuffer = await offlineContext.startRendering();
+      
+      // Convert to WAV then to WebM using MediaRecorder
+      const wavBlob = audioBufferToWav(renderedBuffer);
+      
+      // Use MediaRecorder to encode as WebM
+      return new Promise((resolve, reject) => {
+        const audioContext = new AudioContext();
+        const source = audioContext.createBufferSource();
+        source.buffer = renderedBuffer;
+        
+        const dest = audioContext.createMediaStreamDestination();
+        source.connect(dest);
+        
+        const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm' });
+        const chunks = [];
+        
+        recorder.ondataavailable = (e) => chunks.push(e.data);
+        recorder.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' }));
+        recorder.onerror = reject;
+        
+        recorder.start();
+        source.start(0);
+        
+        // Stop after buffer duration
+        setTimeout(() => {
+          recorder.stop();
+          source.stop();
+          audioContext.close();
+        }, (renderedBuffer.duration * 1000) + 100);
+      });
+    }
+
+    function audioBufferToWav(buffer) {
+      const numberOfChannels = buffer.numberOfChannels;
+      const length = buffer.length * numberOfChannels * 2;
+      const arrayBuffer = new ArrayBuffer(44 + length);
+      const view = new DataView(arrayBuffer);
+      const channels = [];
+      let offset = 0;
+      let pos = 0;
+      
+      // Write WAV header
+      const setUint16 = (data) => {
+        view.setUint16(pos, data, true);
+        pos += 2;
+      };
+      const setUint32 = (data) => {
+        view.setUint32(pos, data, true);
+        pos += 4;
+      };
+      
+      setUint32(0x46464952); // "RIFF"
+      setUint32(36 + length); // file length - 8
+      setUint32(0x45564157); // "WAVE"
+      setUint32(0x20746d66); // "fmt " chunk
+      setUint32(16); // length = 16
+      setUint16(1); // PCM
+      setUint16(numberOfChannels);
+      setUint32(buffer.sampleRate);
+      setUint32(buffer.sampleRate * 2 * numberOfChannels); // byte rate
+      setUint16(numberOfChannels * 2); // block align
+      setUint16(16); // bits per sample
+      setUint32(0x61746164); // "data" chunk
+      setUint32(length);
+      
+      // Write interleaved data
+      for (let i = 0; i < buffer.numberOfChannels; i++) {
+        channels.push(buffer.getChannelData(i));
+      }
+      
+      while (pos < arrayBuffer.byteLength) {
+        for (let i = 0; i < numberOfChannels; i++) {
+          let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+          sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+          view.setInt16(pos, sample, true);
+          pos += 2;
+        }
+        offset++;
+      }
+      
+      return new Blob([arrayBuffer], { type: 'audio/wav' });
     }
 
     function openLightbox(url) {
