@@ -1421,8 +1421,8 @@ async function loadOlderMessages() {
       let nicknameHtml = '';
       
       if (nickname.toLowerCase() === 'lil' || nickname.toLowerCase() === 'lill' || nickname.toLowerCase() === 'lilll') {
-        // Simple blue username for Lil, Lill, and Lilll (display all as "Lil") with scrolling pride flag
-        nicknameHtml = `<div class="message-nickname lil-username">Lil<div class="pride-flag"></div></div>`;
+        // Simple blue username for Lil, Lill, and Lilll (display all as "Lil") with scrolling pride flags on both sides
+        nicknameHtml = `<div class="message-nickname lil-username"><div class="pride-flag"></div>Lil<div class="pride-flag"></div></div>`;
       } else if (nickname.toLowerCase() === 'lorena') {
         // Lorena with pretty pink color and animated kisses
         nicknameHtml = `
