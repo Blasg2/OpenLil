@@ -204,6 +204,34 @@ body.in-iframe #chatHeader {
     /* Lil username - simple blue */
     .lil-username {
       color: rgb(44, 120, 173) !important;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Scrolling pride flag */
+    .pride-flag {
+      width: 24px;
+      height: 18px;
+      background: repeating-linear-gradient(180deg, 
+        #e40303 0px, #e40303 3px,
+        #ff8c00 3px, #ff8c00 6px,
+        #ffed00 6px, #ffed00 9px,
+        #008026 9px, #008026 12px,
+        #24408e 12px, #24408e 15px,
+        #732982 15px, #732982 18px);
+      animation: pride-scroll 2s linear infinite;
+      border-radius: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+
+    @keyframes pride-scroll {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 0 18px;
+      }
     }
 
     /* Lorena username - pretty girl pink */
@@ -1350,17 +1378,8 @@ async function loadOlderMessages() {
       } else if (msg.imageUrl) {
         content = `<img src="${escapeHtml(msg.imageUrl)}" class="message-image" draggable="false" onclick="openLightbox('${escapeHtml(msg.imageUrl)}')" alt="img">`;
       } else if (msg.message) {
-        // Check if message is from Lil or Lill - if so, ALL words become red Lil
-        const isFromLil = (msg.nickname || '').toLowerCase() === 'lil' || (msg.nickname || '').toLowerCase() === 'lill' || (msg.nickname || '').toLowerCase() === 'lilll';
-        
-        if (isFromLil) {
-          // Display ALL words as red Lil for Lil/Lill/Lilll messages
-          const words = msg.message.split(' ');
-          content = words.map(w => 
-            `<span style="color:red;font-weight:bold">Lil</span>`
-          ).join(' ');
-        } else if (msg.transformedIndices?.length) {
-          // Normal transformation for other users
+        // Display transformed words based on transformedIndices for all users
+        if (msg.transformedIndices?.length) {
           const words = msg.message.split(' ');
           content = words.map((w, i) => msg.transformedIndices.includes(i)
             ? `<span style="color:red;font-weight:bold">${escapeHtml(w)}</span>`
@@ -1402,8 +1421,8 @@ async function loadOlderMessages() {
       let nicknameHtml = '';
       
       if (nickname.toLowerCase() === 'lil' || nickname.toLowerCase() === 'lill' || nickname.toLowerCase() === 'lilll') {
-        // Simple blue username for Lil, Lill, and Lilll (display all as "Lil")
-        nicknameHtml = `<div class="message-nickname lil-username">Lil</div>`;
+        // Simple blue username for Lil, Lill, and Lilll (display all as "Lil") with scrolling pride flag
+        nicknameHtml = `<div class="message-nickname lil-username">Lil<div class="pride-flag"></div></div>`;
       } else if (nickname.toLowerCase() === 'lorena') {
         // Lorena with pretty pink color and animated kisses
         nicknameHtml = `
@@ -1477,16 +1496,18 @@ async function loadOlderMessages() {
       const words = message.split(' ');
       const transformedIndices = [];
       
-      // If the sender is "Lil", "Lill", or "Lilll", transform ALL words to "Lil"
+      // If the sender is "Lil", "Lill", or "Lilll", transform words with 15% chance
       const isLil = userNickname.toLowerCase() === 'lil' || userNickname.toLowerCase() === 'lill' || userNickname.toLowerCase() === 'lilll';
       
       const transformed = words.map((w, i) => {
         if (w.toLowerCase() === 'lil') return w;
         
         if (isLil) {
-          // Lil/Lill/Lilll's messages: every word becomes "Lil"
-          transformedIndices.push(i);
-          return 'Lil';
+          // Lil/Lill/Lilll's messages: 15% chance per word becomes "Lil"
+          if (Math.random() < 0.15) {
+            transformedIndices.push(i);
+            return 'Lil';
+          }
         } else {
           // Others: 5% chance
           if (Math.random() < 0.05) {
