@@ -1311,11 +1311,12 @@ async function loadOlderMessages() {
   // Sort by timestamp for display order
   older.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
 
-  older.forEach(m => appendMessage(m, true));
+  // Reverse before prepending so oldest appears first
+  older.reverse().forEach(m => appendMessage(m, true));
   
-  // Update oldest key
-  oldestMessageKey = older[0].id;
-  oldestTs = older[0].timestamp;
+  // Update oldest key (first in the original sorted array, which is the oldest)
+  oldestMessageKey = older[older.length - 1].id;
+  oldestTs = older[older.length - 1].timestamp;
 
   // Maintain scroll position
   setTimeout(() => {
